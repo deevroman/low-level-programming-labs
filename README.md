@@ -4,11 +4,16 @@
 
 ## Сборка примера
 
-```
-git clone https://github.com/deevroman/low-level-programming-labs.git
-cd  low-level-programming-labs/examples
-cmake ../ && make
-./bin/*/*
+```bash
+git clone https://github.com/deevroman/low-level-programming-labs.git && cd low-level-programming-labs
+# сборка модуля
+cmake -B examples/llp -DCMAKE_BUILD_TYPE=Release llp
+cmake --build llp/build --config Release
+# сборка примера
+cmake -B examples/llp -DCMAKE_BUILD_TYPE=Release llp
+cmake --build examples/build --config Release
+# запуск
+./examples/bin/*/*
 ```
 
 Вариант 1. Документное дерево
