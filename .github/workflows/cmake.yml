@@ -33,7 +33,8 @@ jobs:
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ${{github.workspace}}/examples
 
     - name: Build
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} ${{github.workspace}}/examples
+      run: cd examples && make
+#      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} ${{github.workspace}}/examples
     - uses: actions/upload-artifact@v2
       with:
         name: ${{ matrix.os }}-llp
