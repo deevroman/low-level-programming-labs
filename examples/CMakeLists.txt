@@ -6,8 +6,6 @@ set(CMAKE_CXX_STANDARD 14)
 add_executable(examples main.cpp)
 
 message(STATUS "CMAKE_SOURCE_DIR: ${CMAKE_SOURCE_DIR}")
-message(STATUS "CMAKE_FIND_LIBRARY_PREFIXES: ${CMAKE_FIND_LIBRARY_PREFIXES}")
-message(STATUS "CMAKE_FIND_LIBRARY_SUFFIXES: ${CMAKE_FIND_LIBRARY_SUFFIXES}")
 
 target_include_directories(examples 
         PUBLIC src
@@ -17,6 +15,7 @@ find_library(
         LLP_LIB
         NAMES llp libllp
         HINTS "${CMAKE_SOURCE_DIR}/../llp/build"
+        HINTS "${CMAKE_SOURCE_DIR}/../llp/build/${CMAKE_BUILD_TYPE}"
         NO_DEFAULT_PATH
 )
 
