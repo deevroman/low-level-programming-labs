@@ -16,6 +16,14 @@ cmake --build examples/build --config Release
 ./examples/bin/*/*
 ```
 
+### Уже собранное под все платформы
+https://github.com/deevroman/low-level-programming-labs/releases
+
+### Рецепт 
+https://github.com/deevroman/low-level-programming-labs/blob/master/.github/workflows/cmake.yml
+
+---
+
 Вариант 1. Документное дерево
 
 <table>
