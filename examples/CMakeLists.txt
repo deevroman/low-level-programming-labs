@@ -1,0 +1,23 @@
+cmake_minimum_required(VERSION 3.16)
+project(examples)
+
+set(CMAKE_CXX_STANDARD 14)
+
+add_executable(examples main.cpp)
+target_include_directories(examples 
+        PUBLIC src
+        PUBLIC ../llp/include)
+
+find_library(
+        LLP_LIB
+        NAMES llp libllp
+        HINTS "../llp"
+        NO_DEFAULT_PATH
+)
+
+message(STATUS "LLP_LIB: [${LLP_LIB}]")
+
+target_link_libraries(examples ${LLP_LIB})
+
+set(EXECUTABLE_OUTPUT_PATH "./bin/${CMAKE_SYSTEM}")
+set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "${PROJECT_NAME}_${CMAKE_SYSTEM}")
