@@ -14,7 +14,7 @@ target_include_directories(examples
 find_library(
         LLP_LIB
         NAMES llp libllp
-        HINTS "${CMAKE_SOURCE_DIR}/../llp"
+        HINTS "${CMAKE_SOURCE_DIR}/../llp/build"
         NO_DEFAULT_PATH
 )
 

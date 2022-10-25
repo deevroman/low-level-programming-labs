@@ -4,13 +4,13 @@ on:
   push:
     branches: [ master ]
     paths-ignore:
-    - '**.md'
-    - 'reports/**'
+      - '**.md'
+      - 'reports/**'
   pull_request:
     branches: [ master ]
     paths-ignore:
-    - '**.md'
-    - 'reports/**'
+      - '**.md'
+      - 'reports/**'
 
 env:
   BUILD_TYPE: Release
@@ -22,46 +22,53 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        artifact: ["llp"]
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        artifact: [ "llp" ]
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ${{github.workspace}}/examples
+      - name: Build llp
+        run: |
+          cmake -B ${{github.workspace}}/llp/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ${{github.workspace}}/llp
+          cd llp/build
+          make
+          cd -
+      - name: Build examples
+        run: |
+          cmake -B ${{github.workspace}}/examples/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ${{github.workspace}}/examples
+          cd examples/build
+          make
+          cd -
 
-    - name: Build
-      run: cd examples && make
-#      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} ${{github.workspace}}/examples
-    - uses: actions/upload-artifact@v2
-      with:
-        name: ${{ matrix.os }}-llp
-        path: bin/*/*
-        retention-days: 1
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.os }}-llp
+          path: bin/*/*
+          retention-days: 1
   create_release:
     name: "Prelease"
     needs: build
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/download-artifact@v2
-    
-    - uses: "marvinpinto/action-automatic-releases@latest"
-      with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: "latest"
-        prerelease: true
-        title: "Development Build"
-        files: |
-          ubuntu-latest-llp
-          macos-latest-llp
-          windows-latest-llp
-    
+      - uses: actions/download-artifact@v2
+
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: true
+          title: "Development Build"
+          files: |
+            ubuntu-latest-llp
+            macos-latest-llp
+            windows-latest-llp
         
-#     - name: Test
-#       working-directory: ${{github.workspace}}/build
-#       # Execute tests defined by the CMake configuration.  
-#       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-#       run: ctest -C ${{env.BUILD_TYPE}}
+        
+        #     - name: Test
+        #       working-directory: ${{github.workspace}}/build
+        #       # Execute tests defined by the CMake configuration.  
+        #       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
+        #       run: ctest -C ${{env.BUILD_TYPE}}
       
