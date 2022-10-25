@@ -4,14 +4,17 @@ project(examples)
 set(CMAKE_CXX_STANDARD 14)
 
 add_executable(examples main.cpp)
+
+message(STATUS "CMAKE_SOURCE_DIR: ${CMAKE_SOURCE_DIR}")
+
 target_include_directories(examples 
         PUBLIC src
-        PUBLIC ../llp/include)
+        PUBLIC "${CMAKE_SOURCE_DIR}/../llp/include")
 
 find_library(
         LLP_LIB
         NAMES llp libllp
-        HINTS "../llp"
+        HINTS "${CMAKE_SOURCE_DIR}/../llp"
         NO_DEFAULT_PATH
 )
 
