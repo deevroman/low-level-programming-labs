@@ -2,3 +2,4 @@ bin
 .idea
 cmake-build-debug
 CMakeFiles
+build
