@@ -1,5 +1,5 @@
-#ifndef EXAMPLES_DATA_ITEM_H
-#define EXAMPLES_DATA_ITEM_H
+#ifndef LLP_DATA_ITEM_H
+#define LLP_DATA_ITEM_H
 
 typedef long long iid;
 
@@ -17,4 +17,4 @@ public:
 
 };
 
-#endif //EXAMPLES_DATA_ITEM_H
+#endif //LLP_DATA_ITEM_H

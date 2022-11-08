@@ -1,12 +1,13 @@
-#ifndef EXAMPLES_STORAGE_LINK_H
-#define EXAMPLES_STORAGE_LINK_H
+#ifndef LLP_STORAGE_LINK_H
+#define LLP_STORAGE_LINK_H
 
 #include <cstdio>
+#include "types.h"
 
-class storage_link{
+class storage_link {
 public:
-    FILE **file;
-    long long offset;
+    db_ptr_t address;
+    // maybe [page, offset] for page moving  
 };
 
-#endif //EXAMPLES_STORAGE_LINK_H
+#endif //LLP_STORAGE_LINK_H

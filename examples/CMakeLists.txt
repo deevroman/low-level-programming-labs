@@ -1,13 +1,14 @@
 cmake_minimum_required(VERSION 3.16)
 project(examples)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_FLAGS "-DDEBUG")
 
 add_executable(examples main.cpp)
 
 message(STATUS "CMAKE_SOURCE_DIR: ${CMAKE_SOURCE_DIR}")
 
-target_include_directories(examples 
+target_include_directories(examples
         PUBLIC src
         PUBLIC "${CMAKE_SOURCE_DIR}/../llp/include")
 
