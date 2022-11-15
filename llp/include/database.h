@@ -1,8 +1,10 @@
 #ifndef LLP_DATABASE_H
 #define LLP_DATABASE_H
 
+#include <typeinfo>
 #include <string>
 #include <fcntl.h>
+#include <opencl-c.h>
 #include "logger.h"
 #include "file_interface.h"
 #include "file_header.h"
@@ -10,13 +12,15 @@
 #include "nodes_page_header.h"
 #include "strings_page_header.h"
 #include "query.h"
+#include "page.h"
 
-const db_size_t DEFAULT_SCHEMAS_PAGE_SIZE = 1 << 6;
-const db_size_t DEFAULT_NODES_PAGE_SIZE = 1 << 6;
-const db_size_t DEFAULT_STRINGS_PAGE_SIZE = 1 << 6;
+const db_size_t DEFAULT_PAGE_SIZE = 1 << 8;
+const db_size_t DEFAULT_SCHEMAS_PAGE_SIZE = DEFAULT_PAGE_SIZE;
+const db_size_t DEFAULT_NODES_PAGE_SIZE = DEFAULT_PAGE_SIZE;
+const db_size_t DEFAULT_STRINGS_PAGE_SIZE = DEFAULT_PAGE_SIZE;
 
 class database {
-public: // XXX
+public:
     file_interface *file;
     file_header header;
 
@@ -69,11 +73,12 @@ public: // XXX
 
         file->write(&header, sizeof(header), 0);
     }
-
-    void alloc_schemas_page(db_size_t size = -1) {
+    
+    void alloc_page(page_header page_header, db_size_t size = -1){
         if (size == -1) {
-            size = DEFAULT_SCHEMAS_PAGE_SIZE;
+            size = DEFAULT_PAGE_SIZE;
         }
+        size = std::max(size, DEFAULT_PAGE_SIZE);
         schemas_page_header h1 = schemas_page_header(0, size, header.file_end);
         file->write(&h1, sizeof(schemas_page_header), header.file_end);
 
@@ -83,37 +88,21 @@ public: // XXX
 
         header.file_end += sizeof(schemas_page_header) + size;
     }
+    
 
-    void alloc_nodes_page(db_size_t size = -1) {
-        if (size == -1) {
-            size = DEFAULT_NODES_PAGE_SIZE;
+    template<class header_page_t>
+    void insert_into_page(void *data, int size, header_page_t page_header, db_ptr_t page_ptr) {
+        if (page_header.last_elem + size > page_ptr + sizeof(header_page_t) + page_header.size) {
+
+            alloc_page(page_header, size);
         }
-        nodes_page_header h1 = nodes_page_header(0, size, header.file_end);
-        file->write(&h1, sizeof(nodes_page_header), header.file_end);
-
-        void *zeros = calloc(size, 1);
-        file->write(zeros, size);
-        free(zeros);
-
-        header.file_end += sizeof(nodes_page_header) + size;
     }
 
-    void alloc_strings_page(db_size_t size = -1) {
-        if (size == -1) {
-            size = DEFAULT_STRINGS_PAGE_SIZE;
-        }
-        strings_page_header h1 = strings_page_header(0, size, header.file_end);
-        file->write(&h1, sizeof(strings_page_header), header.file_end);
+    void add_schema() {
 
-        void *zeros = calloc(size, 1);
-        file->write(zeros, size);
-        free(zeros);
-
-        header.file_end += sizeof(strings_page_header) + size;
     }
 
     result create_schema(const create_schema_query args) {
-
     }
 
 public:
