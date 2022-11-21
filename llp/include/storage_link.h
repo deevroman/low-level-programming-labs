@@ -1,7 +1,6 @@
 #ifndef LLP_STORAGE_LINK_H
 #define LLP_STORAGE_LINK_H
 
-#include <cstdio>
 #include "types.h"
 
 class storage_link {

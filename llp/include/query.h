@@ -1,7 +1,6 @@
 #ifndef LLP_QUERY_H
 #define LLP_QUERY_H
 
-#include <utility>
 #include <variant>
 #include <string>
 #include <cstdint>

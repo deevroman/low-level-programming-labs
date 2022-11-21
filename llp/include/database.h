@@ -4,7 +4,7 @@
 #include <typeinfo>
 #include <type_traits>
 #include <string>
-#include <fcntl.h>
+#include <vector>
 #include "logger.h"
 #include "file_interface.h"
 #include "file_header.h"
@@ -184,6 +184,7 @@ public:
             sh.fields[i] = {save_string(k), v};
         }
         save_schema(sh);
+        
     }
 
     db_ptr_t *save_schema(scheme_header sh) {
@@ -224,7 +225,8 @@ public:
         } else {
             slp = reinterpret_cast<page_header *>(master_header.schemas_first_page);
         }
-
+        
+        return result;
     }
 
 

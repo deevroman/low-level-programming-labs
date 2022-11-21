@@ -1,7 +1,6 @@
 #ifndef LLP_FILE_HEADER_H
 #define LLP_FILE_HEADER_H
 
-#include <cstdint>
 #include "types.h"
 
 const int64_t DATABASE_FILE_SIGNATURE = 0x4848484848484848;

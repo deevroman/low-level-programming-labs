@@ -2,7 +2,6 @@
 #define EXAMPLES_PAGE_H
 
 
-#include <cstdint>
 #include "types.h"
 
 const db_size_t DEFAULT_PAGE_SIZE = 1 << 8;
