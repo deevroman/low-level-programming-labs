@@ -49,7 +49,7 @@ jobs:
       
       - name: test
         working-directory: ${{github.workspace}}/llp/build
-        run: ctest -C ${{env.BUILD_TYPE}} 
+        run: ctest -C ${{env.BUILD_TYPE}} --output-on-failure
   create_release:
     name: "Prelease"
     needs: build  
