@@ -25,10 +25,10 @@ public:
     file_header master_header;
 
     constexpr bool is_in_file() {
-#ifndef DEBUG
-        return std::is_same_v<T_file_interface, file_interface>;
+#ifdef DEBUG
+        return false;
 #else
-        return true;
+        return std::is_same_v<T_file_interface, file_interface>;
 #endif
     }
 

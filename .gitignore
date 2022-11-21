@@ -4,3 +4,4 @@ cmake-build-debug
 CMakeFiles
 build
 examples/tmp
+_deps

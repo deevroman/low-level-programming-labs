@@ -8,15 +8,37 @@ set(CMAKE_BUILD_TYPE Debug)
 add_library(llp INTERFACE)
 target_include_directories(llp INTERFACE {CMAKE_CURRENT_SOURCE_DIR})
 
-#add_library(llp
-#        include/llp.h
-#        include/logger.h
-#        include/query.h
-#        include/storage_link.h
-#        include/database.h
-#        include/data_portion.h
-#        include/data_item.h
-#        include/file_interface.h)
-
 
 include_directories(include)
+
+
+enable_testing()
+##################################
+# Download and install GoogleTest
+
+include(FetchContent)
+FetchContent_Declare(
+        googletest
+        URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
+)
+# For Windows: Prevent overriding the parent project's compiler/linker settings
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
+
+################
+
+# Define a test
+add_executable(simple_test tests/simple_test.cpp)
+
+######################################
+# Configure the test to use GoogleTest
+#
+# If used often, could be made a macro.
+
+target_link_libraries(
+        simple_test
+        GTest::gtest_main
+)
+
+include(GoogleTest)
+gtest_discover_tests(simple_test)
