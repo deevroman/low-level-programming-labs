@@ -1,5 +1,5 @@
-#ifdef LOCAL
-#define _GLIBCXX_DEBUG
+#ifdef DEBUG
+//#define _GLIBCXX_DEBUG
 #endif
 
 #include <iostream>

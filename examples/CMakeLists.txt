@@ -4,6 +4,7 @@ project(examples)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS "-DDEBUG")
 
+
 add_executable(examples main.cpp)
 
 message(STATUS "CMAKE_SOURCE_DIR: ${CMAKE_SOURCE_DIR}")
