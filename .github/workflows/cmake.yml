@@ -48,11 +48,11 @@ jobs:
           retention-days: 1
       
       - name: test
-        working-directory: ${{github.workspace}}/build
+        working-directory: ${{github.workspace}}/llp/build
         run: ctest -C ${{env.BUILD_TYPE}} 
   create_release:
     name: "Prelease"
-    needs: build
+    needs: build  
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v2
