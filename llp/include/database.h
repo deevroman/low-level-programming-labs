@@ -230,6 +230,7 @@ public:
 
 public:
     explicit database(const std::string &file_path, bool overwrite = false) {
+        debug("Открытие базы");
 #ifdef DEBUG
         file = new file_in_memory_interface(file_path, overwrite);
 #else
