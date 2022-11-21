@@ -8,9 +8,8 @@
 //#include <fcntl.h>
 //#include <sys/types.h>
 //#include <unistd.h>
-//#include <cstring>
+#include <cstring>
 //#include <csignal>
-//#include <vector>
 #include "logger.h"
 #include "types.h"
 
