@@ -11,11 +11,11 @@ int main(int argc, char *argv[]) {
         std::cout << "Usage: ./example path/to/file";
         return 0;
     }
-
-#ifdef DEBUG 
-    database db = database(argv[1], true);
+    try {
+#ifdef DEBUG
+        database db = database(argv[1], true);
 #else
-    database<file_in_memory_interface> db = database<file_in_memory_interface>(argv[1], true);
+        database<file_in_memory_interface> db = database<file_in_memory_interface>(argv[1], true);
 #endif
 
 //    db.query({CREATE_SCHEMA, query_payload(
@@ -35,5 +35,9 @@ int main(int argc, char *argv[]) {
 //    debug(db.file->read(lol, 100, 0));
 //    debug(feof(db.file->fd));
 //    debug(lol);
+    }
+    catch (const char *msg) {
+        std::cout << msg << std::endl;
+    }
     return 0;
 }
