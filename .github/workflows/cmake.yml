@@ -46,9 +46,10 @@ jobs:
           name: ${{ matrix.os }}-llp
           path: examples/build/bin/*/*
           retention-days: 1
-  test:
-    working-directory: ${{github.workspace}}/build
-    run: ctest -C ${{env.BUILD_TYPE}} 
+      
+      - name: test
+        working-directory: ${{github.workspace}}/build
+        run: ctest -C ${{env.BUILD_TYPE}} 
   create_release:
     name: "Prelease"
     needs: build
