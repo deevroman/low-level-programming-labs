@@ -17,46 +17,82 @@
 #include <csignal>
 #include <vector>
 #include "logger.h"
+#include "types.h"
 
 
 class file_interface {
 public: // XXX
-    FILE *file;
+    FILE *fd;
 public:
     virtual ~file_interface() {
-        if (file != nullptr) {
-            fclose(file);
+        if (fd != nullptr) {
+            fclose(fd);
         }
     }
 
     explicit file_interface(const std::string &file_path, bool overwrite) { // XXX
         if (overwrite) {
-            file = fopen(file_path.c_str(), "w");
-            fclose(file);
+            fd = fopen(file_path.c_str(), "w");
+            fclose(fd);
         }
-        file = fopen(file_path.c_str(), "r+");
-        if (file == nullptr) {
+        fd = fopen(file_path.c_str(), "r+");
+        if (fd == nullptr) {
             // XXX
-            debug(file_path, "не открыт", file);
+            debug(file_path, "не открыт", fd);
         }
         debug("Файл базы открыт:", file_path);
     }
 
 
-    void write(void *ptr, size_t size, long long position = -1) {
+    virtual void write(void *ptr, size_t size, long long position = -1) {
         if (position != -1) {
-            fseek(file, position, SEEK_SET);
+            fseek(fd, position, SEEK_SET);
         }
-        if (fwrite(ptr, size, 1, file) != 1) {
+        if (fwrite(ptr, size, 1, fd) != 1) {
             debug("not wrote");
         }
         debug("write", position, size);
     }
 
-    bool read(void *buffer, size_t size, long long position) {
+    virtual bool read(void *buffer, size_t size, long long position) {
         debug("read", position, size);
-        fseek(file, position, SEEK_SET);
-        return fread(buffer, size, 1, file) == 1;
+        fseek(fd, position, SEEK_SET);
+        return fread(buffer, size, 1, fd) == 1;
+    }
+};
+
+class file_in_memory_interface : public file_interface {
+public: // XXX
+    byte *memory;
+    long long seek{};
+public:
+    file_in_memory_interface(const std::string &filePath, bool overwrite) : file_interface(filePath, overwrite) {
+        memory = static_cast<byte *>(calloc(10050048, sizeof(byte)));
+    }
+
+    void write(void *ptr, size_t size, const db_ptr_t * position = reinterpret_cast<db_ptr_t *>(-1)) {
+        if (position == reinterpret_cast<db_ptr_t *>(-1)) {
+            memcpy((byte *) memory + seek, ptr, size);
+            seek += size;
+        } else {
+            seek = reinterpret_cast<long long int>(position);
+            memcpy((byte *) memory + seek, ptr, size);
+            seek += size;
+        }
+    }
+
+    virtual bool read(void *buffer, size_t size, db_ptr_t *position) {
+        if (position == reinterpret_cast<db_ptr_t *>(-1)) {
+            debug("OH NO");
+//            memcpy(buffer, memory + seek, size);
+//            seek += size;
+            return false;
+        } else {
+            seek = reinterpret_cast<long long int>(position);
+            memcpy(buffer, (std::byte *) memory + seek, size);
+            seek += size;
+        }
+        return true;
     }
 };
 

@@ -4,8 +4,10 @@
 
 #include <cstdint>
 
-typedef int64_t db_ptr_t;
-typedef db_ptr_t db_size_t;
+
+typedef int8_t byte;
+typedef byte db_ptr_t;
+typedef int64_t db_size_t;
 
 enum prime_types {
     DB_INT_32,

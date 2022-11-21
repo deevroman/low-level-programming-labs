@@ -5,15 +5,14 @@
 #include <variant>
 #include <string>
 #include <cstdint>
-#include <unordered_map>
-#include "schemas_page_header.h"
+#include <map>
 #include "schema.h"
 
 
 class insert_query {
     std::string path;
     std::string type;
-    std::unordered_map<std::string, std::variant<int32_t, float, std::string, bool>> fields;
+    std::map<std::string, std::variant<int32_t, float, std::string, bool>> fields;
 };
 
 enum query_type {
@@ -40,8 +39,14 @@ public:
     query(query_type type, const query_payload &payload) : type(type), payload(payload) {}
 };
 
-class result {
 
+//typedef std::variant<> result_payload;
+class result {
+    bool ok;
+    std::string error;
+//    result_payload payload;
+public:
+    result(bool ok, const std::string &error) : ok(ok), error(error) {}
 };
 
 #endif //LLP_QUERY_H
