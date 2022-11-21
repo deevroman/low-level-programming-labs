@@ -15,7 +15,6 @@ void _dbg(const char *sdbg, TH h, TA... a) {
 }
 
 #ifdef DEBUG
-#define _GLIBCXX_DEBUG
 #define debug(...) _dbg("line,"#__VA_ARGS__, __LINE__, __VA_ARGS__)
 #else
 #define debug(...)
