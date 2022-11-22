@@ -19,7 +19,7 @@ env:
 
 jobs:
   build:
-    name: ${{ matrix.os }}-${{ matrix.cxx_compiler }}
+    name: ${{ matrix.os }}-${{ matrix.cxx_compiler || matrix._cxx_compiler }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
