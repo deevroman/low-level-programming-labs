@@ -43,6 +43,7 @@ jobs:
           - os: windows-latest
 #            c_compiler: msbuild
 #            cxx_compiler: msbuild
+            _cxx_compiler: msbuild
 #            generator: '-G "Unix Makefiles"'
 
           - os: windows-latest
@@ -76,7 +77,7 @@ jobs:
 
       - uses: actions/upload-artifact@v2
         with:
-          name: ${{ matrix.os }}-${{ matrix.cxx_compiler }}-llp
+          name: ${{ matrix.os }}-${{ matrix.cxx_compiler || matrix._cxx_compiler}}-llp
           path: examples/build/bin/*/*
           retention-days: 1
 
@@ -97,8 +98,10 @@ jobs:
           prerelease: true
           title: "Development Build"
           files: |
-            ubuntu-latest-llp
-            macos-latest-llp
-            windows-latest-llp
+            ubuntu-latest-x86_64-w64-mingw32-g++-llp
+            ubuntu-latest-x86_64-w64-mingw32-g++-llp
+            macos-latest-clang++-llp
+            windows-latest-msbuild-llp
+            windows-latest-x86_64-w64-mingw32-g++llp
 
 
