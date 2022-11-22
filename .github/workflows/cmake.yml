@@ -41,9 +41,9 @@ jobs:
             generator: '-G "Unix Makefiles"'
 
           - os: windows-latest
-            c_compiler: msbuild
-            cxx_compiler: msbuild
-            generator: '-G "Unix Makefiles"'
+#            c_compiler: msbuild
+#            cxx_compiler: msbuild
+#            generator: '-G "Unix Makefiles"'
 
           - os: windows-latest
             c_compiler: x86_64-w64-mingw32-gcc
