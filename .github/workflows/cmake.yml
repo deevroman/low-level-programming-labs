@@ -56,7 +56,7 @@ jobs:
 
       - name: Set up MinGW
         if: ${{matrix.cxx_compiler == 'x86_64-w64-mingw32-g++'}}
-        uses: deevroman/setup-mingw@v0.0.1
+        uses: deevroman/setup-mingw@v0.0.2
         with:
           platform: x64
 
