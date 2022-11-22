@@ -50,7 +50,7 @@ public:
 
     void write(void *ptr, size_t size, const db_ptr_t *position = reinterpret_cast<db_ptr_t *>(-1)) {
         if (position != reinterpret_cast<db_ptr_t *>(-1)) {
-            fseek(fd, (long) position, SEEK_SET);
+            fseek(fd, (intptr_t) position, SEEK_SET);
         }
         if (fwrite(ptr, size, 1, fd) != 1) {
             debug("not wrote");
@@ -60,7 +60,7 @@ public:
 
     bool read(void *buffer, size_t size, db_ptr_t *position) {
         debug("read", position, size);
-        fseek(fd, reinterpret_cast<long>(position), SEEK_SET);
+        fseek(fd, (intptr_t) position, SEEK_SET);
         return fread(buffer, size, 1, fd) == 1;
     }
 };
