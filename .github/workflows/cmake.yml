@@ -24,7 +24,17 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        include:
+          - os: ubuntu-latest
+            cxx_compiler: g++-10
+          - os: ubuntu-latest
+            cxx_compiler: clang++
+          - os: macos-latest
+            cxx_compiler: clang++
+          - os: windows-latest
+            cxx_compiler: msbuild
+          - os: windows-latest
+            cxx_compiler: x86_64-w64-mingw32-g++
         artifact: [ "llp" ]
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
@@ -39,12 +49,12 @@ jobs:
         
       - name: Build llp
         run: |
-          cmake -B ${{github.workspace}}/llp/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ${{github.workspace}}/llp
+          cmake -B ${{github.workspace}}/llp/build ${{matrix.generator}} -DCMAKE_CXX_COMPILER=${{matrix.cxx_compiler}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ${{github.workspace}}/llp
           cmake --build ${{github.workspace}}/llp/build --config ${{env.BUILD_TYPE}}
       
       - name: Build examples
         run: |
-          cmake -B ${{github.workspace}}/examples/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ${{github.workspace}}/examples
+          cmake -B ${{github.workspace}}/examples/build ${{matrix.generator}} -DCMAKE_CXX_COMPILER=${{matrix.cxx_compiler}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ${{github.workspace}}/examples
           cmake --build ${{github.workspace}}/examples/build --config ${{env.BUILD_TYPE}}
 
       - uses: actions/upload-artifact@v2
