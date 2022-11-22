@@ -30,7 +30,7 @@ struct page_header {
     db_size_t get_free_space() {
         return size - ind_last_elem;
     }
-} __attribute__((__packed__));
+} PACKED;
 
 static page_header make_schemas_page_header() {
     return page_header(SCHEMAS_PAGE_MARKER);
