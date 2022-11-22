@@ -35,23 +35,24 @@ jobs:
             cxx_compiler: msbuild
           - os: windows-latest
             cxx_compiler: x86_64-w64-mingw32-g++
+            generator: '-G "MinGW Makefiles"'
         artifact: [ "llp" ]
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
       - uses: actions/checkout@v2
-        
+
       - name: Set up MinGW
         uses: egor-tensin/setup-mingw@v2
         if: matrix.os == 'windows-latest'
         with:
           platform: x64
-        
+
       - name: Build llp
         run: |
           cmake -B ${{github.workspace}}/llp/build ${{matrix.generator}} -DCMAKE_CXX_COMPILER=${{matrix.cxx_compiler}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ${{github.workspace}}/llp
           cmake --build ${{github.workspace}}/llp/build --config ${{env.BUILD_TYPE}}
-      
+
       - name: Build examples
         run: |
           cmake -B ${{github.workspace}}/examples/build ${{matrix.generator}} -DCMAKE_CXX_COMPILER=${{matrix.cxx_compiler}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ${{github.workspace}}/examples
@@ -59,16 +60,16 @@ jobs:
 
       - uses: actions/upload-artifact@v2
         with:
-          name: ${{ matrix.os }}-llp
+          name: ${{ matrix.os }}-${{ matrix.cxx_compiler }}-llp
           path: examples/build/bin/*/*
           retention-days: 1
-      
+
       - name: test
         working-directory: ${{github.workspace}}/llp/build
         run: ctest -C ${{env.BUILD_TYPE}} --output-on-failure
   create_release:
     name: "Prelease"
-    needs: build  
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v2
