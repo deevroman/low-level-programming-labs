@@ -4,6 +4,14 @@
 
 #include <cstdint>
 
+
+#ifdef __GNUC__
+#define PACKED __attribute__((packed))
+#else
+#define PACKED
+#endif
+
+
 typedef int8_t byte;
 typedef byte db_ptr_t;
 typedef int64_t db_size_t;

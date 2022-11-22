@@ -35,7 +35,7 @@ struct file_header {
 
     file_header() {}
 
-} __attribute__((packed));
+} PACKED;
 #pragma pack(pop)
 
 #endif //LLP_FILE_HEADER_H

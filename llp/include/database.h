@@ -116,7 +116,7 @@ public:
         bool is_chunk;
         db_size_t size;
         db_ptr_t *nxt_chunk;
-    }__attribute__((packed));
+    } PACKED;
 #pragma pack(pop)
 
     struct string_chunk {
@@ -166,7 +166,7 @@ public:
         db_ptr_t *nxt_chunk;
         db_ptr_t name;
         db_size_t size;
-    }__attribute__((packed));
+    } PACKED;
 #pragma pack(pop)
 
 
