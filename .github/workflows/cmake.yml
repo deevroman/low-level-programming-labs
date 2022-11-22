@@ -22,17 +22,21 @@ jobs:
     name: ${{ matrix.os }}-${{ matrix.cxx_compiler }}
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
             cxx_compiler: g++-10
+            generator: '-G "Unix Makefiles"'
           - os: ubuntu-latest
             cxx_compiler: clang++
+            generator: '-G "Unix Makefiles"'
           - os: macos-latest
             cxx_compiler: clang++
+            generator: '-G "Unix Makefiles"'
           - os: windows-latest
             cxx_compiler: msbuild
+            generator: '-G "Unix Makefiles"'
           - os: windows-latest
             cxx_compiler: x86_64-w64-mingw32-g++
             generator: '-G "MinGW Makefiles"'
