@@ -22,43 +22,46 @@ jobs:
     name: ${{ matrix.os }}-${{ matrix.cxx_compiler }}
     runs-on: ${{ matrix.os }}
     strategy:
-#      fail-fast: false
+      #      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
             c_compiler: gcc-10
             cxx_compiler: g++-10
             generator: '-G "Unix Makefiles"'
+
           - os: ubuntu-latest
             c_compiler: clang
             cxx_compiler: clang++
             generator: '-G "Unix Makefiles"'
+
           - os: macos-latest
             c_compiler: clang
             cxx_compiler: clang++
             generator: '-G "Unix Makefiles"'
+
           - os: windows-latest
             c_compiler: msbuild
             cxx_compiler: msbuild
             generator: '-G "Unix Makefiles"'
+
           - os: windows-latest
             c_compiler: x86_64-w64-mingw32-gcc
             cxx_compiler: x86_64-w64-mingw32-g++
             generator: '-G "MinGW Makefiles"'
-        artifact: [ "llp" ]
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
       - uses: actions/checkout@v2
 
       - name: Set up MinGW
+        if: ${{matrix.os == 'windows-latest'}}
         uses: egor-tensin/setup-mingw@v2
-        if: matrix.os == 'windows-latest'
         with:
           platform: x64
-      
+
       - name: update MinGW
-        if: matrix.os == 'windows-latest'
+        if: ${{matrix.os == 'windows-latest'}}
         run: choco upgrade mingw
 
       - name: Build llp

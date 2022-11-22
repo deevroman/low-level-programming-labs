@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 project(examples)
 
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_FLAGS "-DDEBUG")
+set(CMAKE_CXX_FLAGS "-DDEBUG -fno-permissive")
 
 
 add_executable(examples main.cpp)
