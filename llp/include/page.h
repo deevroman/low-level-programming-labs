@@ -10,7 +10,7 @@ const int64_t SCHEMAS_PAGE_MARKER = 0xAA;
 const int64_t NODES_PAGE_MARKER = 0xBB;
 const int64_t STRINGS_PAGE_MARKER = 0xCC;
 
-struct __attribute__((packed)) page_header {
+struct page_header {
     page_header() {
 
     }
@@ -30,7 +30,7 @@ struct __attribute__((packed)) page_header {
     db_size_t get_free_space() {
         return size - ind_last_elem;
     }
-};
+} __attribute__((__packed__));
 
 static page_header make_schemas_page_header() {
     return page_header(SCHEMAS_PAGE_MARKER);

@@ -111,12 +111,13 @@ public:
 
 //    page_header load_page_header(db_ptr_t *ptr) {
 //    }
-
-    struct __attribute__((packed)) string_header_chunk {
+#pragma pack(push, 1)
+    struct string_header_chunk {
         bool is_chunk;
         db_size_t size;
         db_ptr_t *nxt_chunk;
-    };
+    }__attribute__((packed));
+#pragma pack(pop)
 
     struct string_chunk {
         bool is_chunk;
@@ -159,12 +160,15 @@ public:
         prime_types value_type;
     };
 
-    struct __attribute__((packed)) scheme_header_chunk {
+#pragma pack(push, 1)
+    struct scheme_header_chunk {
         bool is_chunk;
         db_ptr_t *nxt_chunk;
         db_ptr_t name;
         db_size_t size;
-    };
+    }__attribute__((packed));
+#pragma pack(pop)
+
 
     struct scheme_header {
         bool is_chunk;
@@ -184,7 +188,7 @@ public:
             sh.fields[i] = {save_string(k), v};
         }
         save_schema(sh);
-        
+
     }
 
     db_ptr_t *save_schema(scheme_header sh) {
@@ -225,7 +229,7 @@ public:
         } else {
             slp = reinterpret_cast<page_header *>(master_header.schemas_first_page);
         }
-        
+
         return result;
     }
 

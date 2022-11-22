@@ -5,7 +5,8 @@
 
 const int64_t DATABASE_FILE_SIGNATURE = 0x4848484848484848;
 
-struct __attribute__((packed)) file_header {
+#pragma pack(push,1)
+struct file_header {
     // сигнатура файла
     int64_t SIGNATURE{};
     // позиция конца файла
@@ -34,7 +35,7 @@ struct __attribute__((packed)) file_header {
 
     file_header() {}
 
-};
-
+} __attribute__((packed));
+#pragma pack(pop)
 
 #endif //LLP_FILE_HEADER_H

@@ -4,7 +4,6 @@
 
 #include <cstdint>
 
-
 typedef int8_t byte;
 typedef byte db_ptr_t;
 typedef int64_t db_size_t;
