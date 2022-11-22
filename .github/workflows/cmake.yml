@@ -30,7 +30,13 @@ jobs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
       - uses: actions/checkout@v2
-
+        
+      - name: Set up MinGW
+        uses: egor-tensin/setup-mingw@v2
+        if: matrix.os == 'windows-latest'
+        with:
+          platform: x64
+        
       - name: Build llp
         run: |
           cmake -B ${{github.workspace}}/llp/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ${{github.workspace}}/llp
