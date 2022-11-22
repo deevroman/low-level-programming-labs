@@ -56,13 +56,13 @@ jobs:
 
       - name: Set up MinGW
         if: ${{matrix.cxx_compiler == 'x86_64-w64-mingw32-g++'}}
-        uses: egor-tensin/setup-mingw@v2
+        uses: deevroman/setup-mingw@v0.0.1
         with:
           platform: x64
 
-      - name: update MinGW
-        if: ${{matrix.cxx_compiler == 'x86_64-w64-mingw32-g++'}}
-        run: choco upgrade mingw
+#      - name: update MinGW
+#        if: ${{matrix.cxx_compiler == 'x86_64-w64-mingw32-g++'}}
+#        run: choco upgrade mingw
 
       - name: Build llp
         run: |
