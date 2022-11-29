@@ -39,13 +39,17 @@ public:
 };
 
 
-//typedef std::variant<> result_payload;
+typedef std::variant<std::vector<schema>> result_payload;
+
 class result {
+public:
     bool ok;
     std::string error;
-//    result_payload payload;
-public:
+    result_payload payload;
+
     result(bool ok, const std::string &error) : ok(ok), error(error) {}
+
+    result(bool ok, const std::string &error, const result_payload &payload) : ok(ok), error(error), payload(payload) {}
 };
 
 #endif //LLP_QUERY_H

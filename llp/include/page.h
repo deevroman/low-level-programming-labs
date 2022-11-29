@@ -16,16 +16,11 @@ struct page_header {
     }
 
     int64_t MAGIC_MARKER;
-    db_ptr_t nxt_page;
-    db_size_t size;
-    db_size_t ind_last_elem;
+    db_ptr_t nxt_page{};
+    db_size_t size = DEFAULT_PAGE_SIZE;
+    db_size_t ind_last_elem{};
 
     explicit page_header(int64_t magicMarker) : MAGIC_MARKER(magicMarker) {}
-
-    page_header(int64_t magicMarker, db_ptr_t nxtPage, db_size_t size, db_ptr_t lastElem) : MAGIC_MARKER(magicMarker),
-                                                                                            nxt_page(nxtPage),
-                                                                                            size(size),
-                                                                                            ind_last_elem(lastElem) {}
 
     db_size_t get_free_space() {
         return size - ind_last_elem;

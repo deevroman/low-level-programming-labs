@@ -11,26 +11,10 @@
 #include "query.h"
 #include "page.h"
 
-#ifndef DEBUG
-template<class T_file_interface>
-#endif
-
 class database {
 public:
-#ifdef DEBUG
-    file_in_memory_interface *file;
-#else
-    T_file_interface *file;
-#endif
+    file_interface *file;
     file_header master_header;
-
-    constexpr bool is_in_file() {
-#ifdef DEBUG
-        return false;
-#else
-        return std::is_same_v<T_file_interface, file_interface>;
-#endif
-    }
 
     virtual ~database() {
         delete file;
@@ -105,12 +89,6 @@ public:
         }
     }
 
-//    void add_schema() {
-//
-//    }
-
-//    page_header load_page_header(db_ptr_t *ptr) {
-//    }
 #pragma pack(push, 1)
     struct string_header_chunk {
         bool is_chunk;
@@ -130,28 +108,22 @@ public:
         auto result = master_header.strings_last_page;
         auto kek = page_header();
         page_header *slp = &kek;
-        if (is_in_file()) {
-            this->file->read(slp, sizeof(page_header), master_header.strings_last_page);
-        } else {
-            slp = reinterpret_cast<page_header *>(master_header.strings_last_page);
-        }
+        this->file->read(slp, sizeof(page_header), master_header.strings_last_page);
         string_header_chunk to_save;
-        if (slp->get_free_space() >= sizeof(string_header_chunk) + s.size()) {
+        if (slp->get_free_space() >= sizeof(string_header_chunk) + s.size() + 1) {
             to_save.is_chunk = false;
             to_save.size = s.size();
             to_save.nxt_chunk = nullptr;
             this->file->write(&to_save, sizeof(string_chunk),
                               master_header.strings_last_page + sizeof(page_header) + slp->ind_last_elem);
-            this->file->write((void *) s.c_str(), to_save.size);
-            master_header.strings_last_page += sizeof(page_header) + slp->ind_last_elem + to_save.size;
+            this->file->write((void *) s.c_str(), to_save.size + 1);
+            slp->ind_last_elem += sizeof(string_chunk) + to_save.size + 1;
         } else {
             // XXX
             debug("oops");
         }
-
-        if (is_in_file()) {
-            this->file->write(slp, sizeof(page_header), master_header.strings_last_page);
-        }
+        this->file->write(slp, sizeof(page_header), master_header.strings_last_page);
+        file->write(&master_header, sizeof(master_header), 0);
         return result;
     }
 
@@ -170,83 +142,83 @@ public:
 #pragma pack(pop)
 
 
-    struct scheme_header {
+    class scheme_header {
+    public:
         bool is_chunk;
         db_ptr_t *nxt_chunk;
         db_ptr_t *name;
         db_size_t size;
         scheme_key_value *fields;
+
+        virtual ~scheme_header() {
+            delete[] fields;
+        }
     };
 
     result create_schema(const create_schema_query &args) {
-        scheme_header sh;
+        scheme_header sh{};
         // сохранить имя
+        debug(args.name);
         sh.name = save_string(args.name);
         // сохранить названия полей
         sh.size = args.fields.size();
+        sh.fields = new scheme_key_value[sh.size];
         for (int i = 0; auto [k, v]: args.fields) {
             sh.fields[i] = {save_string(k), v};
         }
         save_schema(sh);
 
+        return result(true, "");
     }
 
-    db_ptr_t *save_schema(scheme_header sh) {
+    db_ptr_t *save_schema(const scheme_header &sh) {
         auto result = master_header.schemas_last_page;
         auto kek = page_header();
         page_header *slp = &kek;
-        if (is_in_file()) {
-            this->file->read(slp, sizeof(page_header), master_header.schemas_last_page);
-        } else {
-            slp = reinterpret_cast<page_header *>(master_header.schemas_last_page);
-        }
-        scheme_header_chunk to_save;
+        this->file->read(slp, sizeof(page_header), master_header.schemas_last_page);
+        scheme_header_chunk to_save{};
         if (slp->get_free_space() >= sizeof(scheme_header_chunk) + sh.size * sizeof(scheme_key_value)) {
             to_save.is_chunk = false;
             to_save.size = sh.size;
             to_save.nxt_chunk = nullptr;
-            this->file->write(&to_save, sizeof(string_chunk),
+            this->file->write(&to_save, sizeof(scheme_header_chunk),
                               master_header.schemas_last_page + sizeof(page_header) + slp->ind_last_elem);
             this->file->write(sh.fields, to_save.size * sizeof(scheme_key_value));
-            master_header.schemas_last_page += sizeof(page_header) + slp->ind_last_elem + to_save.size;
+            slp->ind_last_elem += sizeof(string_chunk) + to_save.size;
         } else {
             // XXX
             debug("oops");
         }
 
-        if (is_in_file()) {
-            this->file->write(slp, sizeof(page_header), master_header.schemas_last_page);
-        }
+        this->file->write(slp, sizeof(page_header), master_header.schemas_last_page);
+        file->write(&master_header, sizeof(master_header), 0);
         return result;
     }
 
-    std::vector<schema> get_schemas() {
-        std::vector<schema> result;
+    result get_schemas() const {
+        std::vector<schema> schemas;
         auto kek = page_header();
         page_header *slp = &kek;
-        if (is_in_file()) {
-            this->file->read(slp, sizeof(page_header), master_header.schemas_first_page);
-        } else {
-            slp = reinterpret_cast<page_header *>(master_header.schemas_first_page);
+        db_ptr_t *current_page = master_header.schemas_first_page;
+        this->file->read(slp, sizeof(page_header), current_page);
+        db_size_t current_schema_offset = 0; 
+        while (current_schema_offset < slp->size) {
+            auto lol = scheme_header_chunk();
+            scheme_header_chunk *shc = &lol;
+            this->file->read(shc, sizeof(scheme_header_chunk), current_page+current_schema_offset);
+//            todo
         }
-
-        return result;
+        
+        return result(true, "", result_payload(
+                schemas
+        ));
     }
 
 
 public:
     explicit database(const std::string &file_path, bool overwrite = false) {
         debug("Открытие базы");
-#ifdef DEBUG
-        file = new file_in_memory_interface(file_path, overwrite);
-#else
-        file = new T_file_interface(file_path, overwrite);
-#endif
-        if (is_in_file()) {
-            info("База находится на диске");
-        } else {
-            info("База находится в ОЗУ");
-        }
+        file = new file_interface(file_path, overwrite);
         if (overwrite) {
             init();
         } else {
@@ -260,9 +232,10 @@ public:
     result query(const query &q) {
         switch (q.type) {
             case CREATE_SCHEMA:
+                info("Запрос на создание новой схемы:");
                 return create_schema(std::get<create_schema_query>(q.payload));
             case SHOW_SCHEMAS:
-                break;
+                return get_schemas();
             case DELETE_SCHEMA:
                 break;
             case INSERT:
@@ -276,7 +249,7 @@ public:
             default:
                 debug("bred"); // XXX
         }
-        debug("bred");
+        return result(false, "bred situation");
     }
 };
 
