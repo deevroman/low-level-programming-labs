@@ -5,6 +5,7 @@
 #include <type_traits>
 #include <typeinfo>
 #include <vector>
+#include <cassert>
 
 #include "file_header.h"
 #include "FileInterface.h"
