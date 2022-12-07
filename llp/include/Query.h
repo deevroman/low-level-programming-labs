@@ -13,7 +13,7 @@ class insert_query {
   std::map<std::string, std::variant<int32_t, float, std::string, bool>> fields;
 };
 
-enum query_type {
+enum QueryType {
   CREATE_SCHEMA = 0,
   SHOW_SCHEMAS,
   DELETE_SCHEMA,
@@ -30,10 +30,10 @@ typedef std::variant<create_schema_query, insert_query> query_payload;
 
 class Query {
  public:
-  query_type type;
+  QueryType type;
   query_payload payload;
 
-  Query(query_type type, const query_payload &payload) : type(type), payload(payload) {}
+  Query(QueryType type, const query_payload &payload) : type(type), payload(payload) {}
 };
 
 typedef std::variant<std::vector<Schema>> result_payload;

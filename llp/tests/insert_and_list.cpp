@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include "Database.h"
 
-TEST(HelloTest, BasicAssertions) {
+TEST(InsertAndListTest, BasicAssertions) {
   Database db = Database("../tmp/file.hex", true);
   EXPECT_NE(db.file_, nullptr);
   db.Query({CREATE_SCHEMA, query_payload(
@@ -22,15 +22,6 @@ TEST(HelloTest, BasicAssertions) {
           }
       )
   )});
-  db.Query({CREATE_SCHEMA, query_payload(
-      create_schema_query(
-          "WEWE-WEWEE-WEWEE",
-          {
-              {"12345-678-90123", DB_FLOAT},
-              {"7654321-1234567", DB_STRING},
-          }
-      )
-  )});
   auto kek = db.GetSchemas();
   EXPECT_TRUE(kek.ok_);
   auto lol = std::get<std::vector<Schema>>(kek.payload_);
@@ -40,9 +31,6 @@ TEST(HelloTest, BasicAssertions) {
   EXPECT_EQ(lol[1].name_, "SUKO-SUKOO-SUKO");
   EXPECT_EQ(lol[1].fields_["AHAHA-AHA-AHAHA"], DB_FLOAT);
   EXPECT_EQ(lol[1].fields_["OLOLOLO-OLOLOLO"], DB_STRING);
-  EXPECT_EQ(lol[2].name_, "WEWE-WEWEE-WEWEE");
-  EXPECT_EQ(lol[2].fields_["12345-678-90123"], DB_FLOAT);
-  EXPECT_EQ(lol[2].fields_["7654321-1234567"], DB_STRING);
 
   for (auto now : lol) {
     now.Print();

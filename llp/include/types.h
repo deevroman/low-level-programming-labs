@@ -20,9 +20,9 @@ constexpr size_t Kek(size_t x) {
 #ifdef DEBUG
 #define PAD(type, value) \
 char name_##value[16] = #value; \
-char pad_##value[Kek(sizeof(type))]{};type value;
+char pad_##value[Kek(sizeof(type))]{};type value
 #else
-#define pad(args) args 
+#define PAD(args) args 
 #endif
 
 typedef int8_t Byte;

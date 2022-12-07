@@ -10,11 +10,4 @@ struct string_header_chunk {
 } PACKED;
 #pragma pack(pop)
 
-struct string_chunk {
-  bool is_chunk;
-  DbSize size;
-  DbPtr nxt_chunk;
-  char *content;
-};
-
 #endif //LLP_INCLUDE_STRING_HEADER_CHUNK_H_

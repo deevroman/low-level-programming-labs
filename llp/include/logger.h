@@ -2,6 +2,7 @@
 #define LLP_INCLUDE_LOGGER_H_
 
 #include <iostream>
+#include <exception>
 
 // #define debug(x) std::cout << #x << ": " << x << endl;
 template<class TH>
@@ -21,7 +22,7 @@ void _dbg(const char *sdbg, TH h, TA... a) {
 #endif
 
 #ifdef DEBUG
-#define todo(...) throw ("line,"#__VA_ARGS__)
+#define todo(...) throw std::runtime_error(std::string("line:") + std::to_string(__LINE__) + "," + __VA_ARGS__)
 #else
 #define todo(...)
 #endif

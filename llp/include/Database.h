@@ -67,7 +67,7 @@ class Database {
     file_->write(&master_header_, sizeof(master_header_), 0);
   }
 
-  void AllocPage(page_header header, DbSize size = -1) {
+  DbPtr AllocPage(page_header header, DbSize size = -1) {
     if (size == -1) {
       size = kDefaultPageSize;
     }
@@ -78,7 +78,9 @@ class Database {
     file_->write(zeros, size);
     free(zeros);
 
+    auto re = master_header_.file_end;
     master_header_.file_end += sizeof(page_header) + size;
+    return re;
   }
 
   template<class header_page_t>
@@ -92,25 +94,31 @@ class Database {
 
   DbPtr SaveString(const std::string &s) {
     DbPtr result = -1;
-    auto kek = page_header();
-    page_header *slp = &kek;
-    this->file_->read(slp, sizeof(page_header), master_header_.strings_last_page);
+    page_header slp = page_header();
+    this->file_->read(&slp, sizeof(page_header), master_header_.strings_last_page);
     string_header_chunk to_save;
-    if (slp->GetFreeSpace() >= sizeof(string_header_chunk) + s.size() + 1) {
+    if (slp.GetFreeSpace() < sizeof(string_header_chunk) + s.size() + 1) {
+      // XXX
+      auto last_string_page = master_header_.strings_last_page;
+      master_header_.strings_last_page = AllocPage(MakeStringsPageHeader());
+      slp.nxt_page = master_header_.strings_last_page;
+      this->file_->write(&slp, sizeof(page_header), last_string_page);
+      this->file_->read(&slp, sizeof(page_header), master_header_.strings_last_page);
+    }
+    if (slp.GetFreeSpace() >= sizeof(string_header_chunk) + s.size() + 1) {
       to_save.is_chunk = false;
       to_save.size = s.size();
       to_save.nxt_chunk = 0;
       this->file_->write(&to_save,
                          sizeof(string_header_chunk),
-                         master_header_.strings_last_page + sizeof(page_header) + slp->ind_last_elem);
-      result = master_header_.strings_last_page + sizeof(page_header) + slp->ind_last_elem;
+                         master_header_.strings_last_page + sizeof(page_header) + slp.ind_last_elem);
+      result = master_header_.strings_last_page + sizeof(page_header) + slp.ind_last_elem;
       this->file_->write((void *) s.c_str(), to_save.size + 1);
-      slp->ind_last_elem += sizeof(string_header_chunk) + to_save.size + 1;
+      slp.ind_last_elem += sizeof(string_header_chunk) + to_save.size + 1;
     } else {
-      // XXX
       todo("oops");
     }
-    this->file_->write(slp, sizeof(page_header),
+    this->file_->write(&slp, sizeof(page_header),
                        master_header_.strings_last_page);
     file_->write(&master_header_, sizeof(master_header_), 0);
     assert(result != -1);
@@ -169,6 +177,14 @@ class Database {
     this->file_->read(&slp, sizeof(page_header), master_header_.schemas_last_page);
     schema_header_chunk to_save{};
     to_save.name = sh.name_;
+    if (slp.GetFreeSpace() < sizeof(schema_header_chunk) + sh.size_ * sizeof(schema_key_value)) {
+      // XXX
+      auto last_schemas_page = master_header_.schemas_last_page;
+      master_header_.schemas_last_page = AllocPage(MakeSchemasPageHeader());
+      slp.nxt_page = master_header_.schemas_last_page;
+      this->file_->write(&slp, sizeof(page_header), last_schemas_page);
+      this->file_->read(&slp, sizeof(page_header), master_header_.schemas_last_page);
+    }
     if (slp.GetFreeSpace() >= sizeof(schema_header_chunk) + sh.size_ * sizeof(schema_key_value)) {
       to_save.is_chunk = false;
       to_save.size = sh.size_;
@@ -179,7 +195,6 @@ class Database {
       this->file_->write(sh.fields_, to_save.size * sizeof(schema_key_value));
       slp.ind_last_elem += sizeof(schema_header_chunk) + to_save.size * sizeof(schema_key_value);
     } else {
-      // XXX
       todo("oops");
     }
     this->file_->write(&slp, sizeof(page_header),
@@ -246,6 +261,7 @@ class Database {
     }
 
     Schema ReadSchema() {
+      debug(cur_, current_page_, current_schema_offset_);
       if (cur_ >= db_->master_header_.schemas_count) {
         return {};
       }
@@ -275,7 +291,6 @@ class Database {
       return result;
     }
 
-    static Schema End() { return {}; }
   };
 
 };
