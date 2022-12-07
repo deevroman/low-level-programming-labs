@@ -4,16 +4,16 @@
 typedef long long iid;
 
 class data_item {
-public:
-    enum {
-        INT32, DOUBLE, BOOL, STRING, NONE
-    } type = NONE;
-    iid id;
-    void *data{};
+ public:
+  enum {
+    INT32, DOUBLE, BOOL, STRING, NONE
+  } type = NONE;
+  iid id;
+  void *data{};
 
-    data_item() = default;
+  data_item() = default;
 
-    explicit data_item(decltype(type) type, iid id, void *value = nullptr) : type(type), id(id), data(data) {};
+  explicit data_item(decltype(type) type, iid id, void *value = nullptr) : type(type), id(id), data(data) {};
 
 };
 

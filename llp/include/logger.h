@@ -1,5 +1,5 @@
-#ifndef LLP_LOGGER_H
-#define LLP_LOGGER_H
+#ifndef LLP_INCLUDE_LOGGER_H_
+#define LLP_INCLUDE_LOGGER_H_
 
 #include <iostream>
 
@@ -9,9 +9,9 @@ void _dbg(const char *sdbg, TH h) { std::cerr << sdbg << '=' << h << std::endl; 
 
 template<class TH, class... TA>
 void _dbg(const char *sdbg, TH h, TA... a) {
-    while (*sdbg != ',') std::cerr << *sdbg++;
-    std::cerr << '=' << h << ',';
-    _dbg(sdbg + 1, a...);
+  while (*sdbg != ',') std::cerr << *sdbg++;
+  std::cerr << '=' << h << ',';
+  _dbg(sdbg + 1, a...);
 }
 
 #ifdef DEBUG
@@ -20,15 +20,20 @@ void _dbg(const char *sdbg, TH h, TA... a) {
 #define debug(...)
 #endif
 
+#ifdef DEBUG
+#define todo(...) throw ("line,"#__VA_ARGS__)
+#else
+#define todo(...)
+#endif
+
 #include <string_view>
 
 void info(std::string_view s) {
-    std::cerr << s << std::endl;
+  std::cerr << s << std::endl;
 }
 
 void error(std::string_view s) {
-    std::cerr << s << std::endl;
+  std::cerr << s << std::endl;
 }
 
-
-#endif //LLP_LOGGER_H
+#endif //LLP_INCLUDE_LOGGER_H_

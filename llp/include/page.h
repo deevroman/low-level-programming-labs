@@ -1,42 +1,38 @@
-#ifndef EXAMPLES_PAGE_H
-#define EXAMPLES_PAGE_H
-
+#ifndef LLP_INCLUDE_PAGE_H_
+#define LLP_INCLUDE_PAGE_H_
 
 #include "types.h"
 
-const db_size_t DEFAULT_PAGE_SIZE = 1 << 8;
-// именно int64_t для поиска в файле
-const int64_t SCHEMAS_PAGE_MARKER = 0xAA;
-const int64_t NODES_PAGE_MARKER = 0xBB;
-const int64_t STRINGS_PAGE_MARKER = 0xCC;
+const DbSize kDefaultPageSize = 1 << 10;
+const uint64_t kSchemasPageMarker = 0xAAAAAAAAAAAAAAAA;
+const uint64_t kNodesPageMarker = 0xBBBBBBBBBBBBBBBB;
+const uint64_t kStringsPageMarker = 0xCCCCCCCCCCCCCCCC;
 
 struct page_header {
-    page_header() {
+  page_header() = default;
 
-    }
+  uint64_t magic_marker{};
+  DbPtr nxt_page{};
+  DbSize size = kDefaultPageSize;
+  DbSize ind_last_elem{};
 
-    int64_t MAGIC_MARKER;
-    db_ptr_t nxt_page{};
-    db_size_t size = DEFAULT_PAGE_SIZE;
-    db_size_t ind_last_elem{};
+  explicit page_header(uint64_t magic_marker) : magic_marker(magic_marker) {}
 
-    explicit page_header(int64_t magicMarker) : MAGIC_MARKER(magicMarker) {}
-
-    db_size_t get_free_space() {
-        return size - ind_last_elem;
-    }
+  [[nodiscard]] DbSize GetFreeSpace() const {
+    return size - ind_last_elem;
+  }
 } PACKED;
 
-static page_header make_schemas_page_header() {
-    return page_header(SCHEMAS_PAGE_MARKER);
+static page_header MakeSchemasPageHeader() {
+  return page_header(kSchemasPageMarker);
 }
 
-static page_header make_nodes_page_header() {
-    return page_header(NODES_PAGE_MARKER);
+static page_header MakeNodesPageHeader() {
+  return page_header(kNodesPageMarker);
 }
 
-static page_header make_strings_page_header() {
-    return page_header(STRINGS_PAGE_MARKER);
+static page_header MakeStringsPageHeader() {
+  return page_header(kStringsPageMarker);
 }
 
-#endif //EXAMPLES_PAGE_H
+#endif //LLP_INCLUDE_PAGE_H_
