@@ -33,8 +33,6 @@ void info(std::string_view s) {
   std::cerr << s << std::endl;
 }
 
-void error(std::string_view s) {
-  std::cerr << s << std::endl;
-}
+#define error(...) throw std::runtime_error(std::string("line:") + std::to_string(__LINE__) + "," + __VA_ARGS__)
 
 #endif //LLP_INCLUDE_LOGGER_H_

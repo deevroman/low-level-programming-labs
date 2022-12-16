@@ -36,13 +36,13 @@ class FileInterface : public AbstractStorage {
   explicit FileInterface(const std::string &file_path, bool overwrite) { // XXX
     if (overwrite) {
       fd_ = fopen(file_path.c_str(), "w");
-      fclose(fd_);
+      if (fd_ != nullptr){
+        fclose(fd_);
+      }
     }
     fd_ = fopen(file_path.c_str(), "r+");
     if (fd_ == nullptr) {
-      // XXX
-      debug(file_path, "не открыт", fd_);
-      throw "Файл с базой не открыт";
+      error("Файл с базой не открыт");
     }
     debug("Файл базы открыт:", file_path);
   }

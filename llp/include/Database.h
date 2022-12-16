@@ -221,8 +221,7 @@ class Database {
       Init();
     } else {
       if (!Load()) {
-        todo("База повреждена");
-        return;  // XXX
+        error("База повреждена");
       }
     }
   }
