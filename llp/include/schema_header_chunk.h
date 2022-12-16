@@ -3,9 +3,7 @@
 #include "types.h"
 
 #pragma pack(push, 1)
-struct schema_header_chunk {
-  PAD(bool, is_chunk);
-  PAD(DbPtr, nxt_chunk);
+struct raw_schema_header {
   PAD(DbPtr, name);
   PAD(DbSize, size);
 } PACKED;

@@ -21,6 +21,7 @@ struct page_header {
   [[nodiscard]] DbSize GetFreeSpace() const {
     return size - ind_last_elem;
   }
+
 } PACKED;
 
 static page_header MakeSchemasPageHeader() {

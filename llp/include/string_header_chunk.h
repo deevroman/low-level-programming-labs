@@ -7,6 +7,7 @@ struct string_header_chunk {
   PAD(bool, is_chunk);
   PAD(DbSize, size);
   PAD(DbPtr, nxt_chunk);
+  PAD(DbPtr, prev_chunk);
 } PACKED;
 #pragma pack(pop)
 
