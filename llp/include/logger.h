@@ -4,6 +4,10 @@
 #include <exception>
 #include <iostream>
 
+#ifndef __FILE_NAME__
+#define __FILE_NAME__() (strrchr(__FILE__, '/') ? strrchr(__FILE_NAME__(), '/') + 1 : __FILE_NAME__())
+#endif
+
 // #define debug(x) std::cout << #x << ": " << x << endl;
 template <class TH>
 void _dbg(const char *sdbg, TH h) {
@@ -30,17 +34,13 @@ void _dbg(const char *sdbg, const char *h, TA... a) {
 }
 
 #ifdef DEBUG
-#define debug(...)                                                      \
-  _dbg(" ," #__VA_ARGS__, __FILE_NAME__ ":" + std::to_string(__LINE__), \
-       __VA_ARGS__)
+#define debug(...) _dbg(" ," #__VA_ARGS__, __FILE_NAME__ ":" + std::to_string(__LINE__), __VA_ARGS__)
 #else
 #define debug(...)
 #endif
 
 #ifdef DEBUG
-#define todo(...)                                                            \
-  throw std::runtime_error(std::string("line:") + std::to_string(__LINE__) + \
-                           "," + __VA_ARGS__)
+#define todo(...) throw std::runtime_error(std::string("line:") + std::to_string(__LINE__) + "," + __VA_ARGS__)
 #else
 #define todo(...)
 #endif
@@ -49,8 +49,7 @@ void _dbg(const char *sdbg, const char *h, TA... a) {
 
 void info(std::string_view s) { std::cerr << s << std::endl; }
 
-#define error(...)                                               \
-  throw std::runtime_error(std::string("line:") + __FILE__ ":" + \
-                           std::to_string(__LINE__) + "," + __VA_ARGS__)
+#define error(...) \
+  throw std::runtime_error(std::string("line:") + __FILE__ ":" + std::to_string(__LINE__) + "," + __VA_ARGS__)
 
 #endif  // LLP_INCLUDE_LOGGER_H_
