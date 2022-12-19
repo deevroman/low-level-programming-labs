@@ -14,26 +14,23 @@ struct page_header {
   uint64_t magic_marker{};
   DbPtr nxt_page{};
   DbSize size = kDefaultPageSize;
-  DbSize ind_last_elem{};
+  DbSize ind_last_elem{0};
 
   explicit page_header(uint64_t magic_marker) : magic_marker(magic_marker) {}
 
   [[nodiscard]] DbSize GetFreeSpace() const {
+#ifdef DEBUG
+    assert(size >= ind_last_elem);
+#endif
     return size - ind_last_elem;
   }
 
 } PACKED;
 
-static page_header MakeSchemasPageHeader() {
-  return page_header(kSchemasPageMarker);
-}
+static page_header MakeSchemasPageHeader() { return page_header(kSchemasPageMarker); }
 
-static page_header MakeNodesPageHeader() {
-  return page_header(kNodesPageMarker);
-}
+static page_header MakeNodesPageHeader() { return page_header(kNodesPageMarker); }
 
-static page_header MakeStringsPageHeader() {
-  return page_header(kStringsPageMarker);
-}
+static page_header MakeStringsPageHeader() { return page_header(kStringsPageMarker); }
 
-#endif //LLP_INCLUDE_PAGE_H_
+#endif  // LLP_INCLUDE_PAGE_H_

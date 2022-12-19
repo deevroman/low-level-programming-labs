@@ -1,10 +1,11 @@
 #ifndef LLP_QUERY_H
 #define LLP_QUERY_H
 
-#include <variant>
-#include <string>
 #include <cstdint>
 #include <map>
+#include <string>
+#include <variant>
+
 #include "Schema.h"
 
 class insert_query {
@@ -13,20 +14,12 @@ class insert_query {
   std::map<std::string, std::variant<int32_t, float, std::string, bool>> fields;
 };
 
-enum QueryType {
-  CREATE_SCHEMA = 0,
-  SHOW_SCHEMAS,
-  DELETE_SCHEMA,
-  INSERT,
-  PRINT,
-  UPDATE,
-  ERASE
-};
+enum QueryType { CREATE_SCHEMA = 0, SHOW_SCHEMAS, DELETE_SCHEMA, INSERT, PRINT, UPDATE, ERASE };
 
-typedef Schema create_schema_query; // XXX Clion bug?
+typedef Schema create_schema_query;  // XXX Clion bug?
 typedef std::string delete_schema_query;
 
-typedef std::variant<create_schema_query, insert_query> query_payload;
+typedef std::variant<create_schema_query, delete_schema_query, insert_query> query_payload;
 
 class Query {
  public:
@@ -36,7 +29,7 @@ class Query {
   Query(QueryType type, const query_payload &payload) : type(type), payload(payload) {}
 };
 
-typedef std::variant<std::vector<Schema>> result_payload;
+typedef std::variant<std::vector<Schema>, Schema> result_payload;
 
 class Result {
  public:
@@ -50,4 +43,4 @@ class Result {
       : ok_(ok), error_(error), payload_(payload) {}
 };
 
-#endif //LLP_QUERY_H
+#endif  // LLP_QUERY_H
