@@ -5,7 +5,7 @@
 #include <iostream>
 
 #ifndef __FILE_NAME__
-#define __FILE_NAME__() (strrchr(__FILE__, '/') ? strrchr(__FILE_NAME__(), '/') + 1 : __FILE_NAME__())
+#define __FILE_NAME__ __FILE__
 #endif
 
 // #define debug(x) std::cout << #x << ": " << x << endl;
