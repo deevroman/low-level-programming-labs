@@ -6,6 +6,7 @@
 #include <type_traits>
 #include <typeinfo>
 #include <vector>
+#include <memory>
 
 #include "FileInterface.h"
 #include "Query.h"
