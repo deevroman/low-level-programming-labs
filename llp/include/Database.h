@@ -179,8 +179,16 @@ class Database {
 
   Result DeleteSchema(const delete_schema_query &name) {
     debug(name);
-    todo("delete");
-    return Result(true, "");
+    auto it = SchemasPageIterator(this);
+    for (int i = 0; i < master_header_.schemas_count; i++) {
+      auto cur = it.ReadSchema();
+      if (cur.name_ == name) {
+        debug("Схема для удаления найдена");
+        SchemasPageIterator(this, cur).RemoveSchemaAndShift();
+        return {true, ""};
+      }
+    }
+    return {false, "Schema for delete not found"};
   }
 
   void AllocPagesForSize(page_header &start_page, DbSize requested_size) {
@@ -206,7 +214,7 @@ class Database {
 
   DbPtr SaveSchema(const SchemaHeader &sh) {
     debug("Записываю схему");
-    auto result = 0;
+    DbPtr result = 0;
 
     auto current_page_address = master_header_.schemas_last_page;
     page_header current_page = page_header();
@@ -225,14 +233,14 @@ class Database {
     }
 
     debug("Сохраняем заголовок");
-    raw_schema_header to_save{.size = sh.size_, .name = sh.name_};
+    raw_schema_header to_save{.name = sh.name_, .size = sh.size_};
 
     result = current_page_address + sizeof(page_header) + current_page.ind_last_elem;
     this->file_->write(&to_save, sizeof(raw_schema_header), result);
     current_page.ind_last_elem += sizeof(raw_schema_header);
     this->file_->write(&current_page, sizeof(page_header), current_page_address);
 
-    debug("Cохраняем элементы");
+    debug("Сохраняем элементы");
     auto saving_size = sh.GetFlexibleElementSize();
     while (saving_size > 0) {
       if (current_page.GetFreeSpace() == 0) {
@@ -260,7 +268,7 @@ class Database {
     for (int i = 0; i < master_header_.schemas_count; i++) {
       schemas.push_back(it.ReadSchema());
     }
-    return Result(true, "", result_payload(schemas));
+    return {true, "", result_payload(schemas)};
   }
 
   [[nodiscard]] Result GetSchemaByName(const std::string &name) const {
@@ -335,26 +343,32 @@ class Database {
       current_page_addres_ = db->master_header_.schemas_first_page;
       current_page_offset_ = 0;
     }
+    SchemasPageIterator(const Database *db, const SchemaWithPosition &sh)
+        : db_(db), current_page_addres_(sh.page_start_), current_page_offset_(sh.position_) {}
 
-    Schema ReadSchema() {
+    
+    SchemaWithPosition ReadSchema() {
       debug("Читаю схему номер", cur_, current_page_addres_, current_page_offset_);
 
       if (cur_ >= db_->master_header_.schemas_count) {
+        debug("Итератор вышел за границу");
         return {};
       }
-      auto result = Schema();
-      auto current_page = page_header();
+      page_header current_page;
       db_->file_->read(&current_page, sizeof(page_header), current_page_addres_);
 
-      // чтение хедера
+      SchemaWithPosition result;
+      result.page_start_ = current_page_addres_;
+      result.position_ = current_page_addres_ + sizeof(page_header) + current_page_offset_;
+
+      debug("Чтение хедера схемы");
       auto raw_header = raw_schema_header();
-      db_->file_->read(&raw_header, sizeof(raw_schema_header),
-                       current_page_addres_ + sizeof(page_header) + current_page_offset_);
+      db_->file_->read(&raw_header, sizeof(raw_schema_header), result.position_);
       current_page_offset_ += sizeof(raw_schema_header);
       result.name_ = db_->ReadString(raw_header.name);
 
       SchemaHeader header(raw_header.name, raw_header.size);
-      // чтение кусков
+      debug("Чтение кусков полей схемы");
       auto *schema_key_value_buffer = header.fields_;
       auto need_read_bytes = header.size_ * (DbSize)sizeof(schema_key_value);
       while (need_read_bytes > 0) {
@@ -374,12 +388,17 @@ class Database {
       }
       current_page_offset_ += header.GetFlexiblePadding();
 
+      debug("Чтение названий ключей схемы");
       for (int i = 0; i < header.size_; i++) {
         result.fields_[db_->ReadString(header.fields_[i].key)] = header.fields_[i].value_type;
       }
       cur_++;
       debug(result.name_);
       return result;
+    }
+
+    void RemoveSchemaAndShift() {
+      
     }
   };
 };

@@ -1,19 +1,21 @@
 #ifndef LLP_INCLUDE_SCHEMA_H_
 #define LLP_INCLUDE_SCHEMA_H_
 
-#include <string>
 #include <map>
+#include <string>
+
 #include "Query.h"
 
 class Schema {
  public:
   std::string name_;
   std::map<std::string, PrimeTypes> fields_;
+
  public:
   Schema() = default;
 
-  Schema(std::string name, std::map<std::string, PrimeTypes> fields) : name_(std::move(name)),
-                                                                       fields_(std::move(fields)) {}
+  Schema(std::string name, std::map<std::string, PrimeTypes> fields)
+      : name_(std::move(name)), fields_(std::move(fields)) {}
   void Print() {
     std::cout << name_ << "\n";
     for (auto [k, v] : fields_) {
@@ -22,4 +24,10 @@ class Schema {
   }
 };
 
-#endif //LLP_INCLUDE_SCHEMA_H_
+class SchemaWithPosition : public Schema {
+ public:
+  DbPtr page_start_{};
+  DbPtr position_{};
+};
+
+#endif  // LLP_INCLUDE_SCHEMA_H_
