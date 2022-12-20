@@ -47,7 +47,13 @@ TEST(HelloTest, BasicAssertions) {
   EXPECT_EQ(lal[0].name_, "SUKO-SUKOO-SUKO");
   EXPECT_EQ(lal[0].fields_["AHAHA-AHA-AHAHA"], DB_FLOAT);
   EXPECT_EQ(lal[0].fields_["OLOLOLO-OLOLOLO"], DB_STRING);
-  
+
+  db.Query({INSERT, query_payload(insert_query("WEWE-WEWEE-WEWE", "SUKO-SUKOO-SUKO",
+                                               {
+                                                   {"12345-678-90123", 3.14},
+                                                   {"7654321-1234567", "URA, INSERT"},
+                                               }))});
+
   for (auto now : lal) {
     now.Print();
     std::cout << std::endl;

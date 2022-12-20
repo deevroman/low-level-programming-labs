@@ -1,17 +1,22 @@
-#ifndef LLP_QUERY_H
-#define LLP_QUERY_H
+#ifndef LLP_INCLUDE_QUERY_H_
+#define LLP_INCLUDE_QUERY_H_
 
 #include <cstdint>
 #include <map>
 #include <string>
+#include <utility>
 #include <variant>
 
 #include "Schema.h"
 
-class insert_query {
+typedef std::variant<int32_t, double, std::string, bool> data_item;
+
+struct insert_query {
   std::string path;
   std::string type;
-  std::map<std::string, std::variant<int32_t, float, std::string, bool>> fields;
+  std::map<std::string, data_item> fields;
+  insert_query(std::string path, std::string type, const std::map<std::string, data_item> &fields)
+      : path(std::move(path)), type(std::move(type)), fields(fields) {}
 };
 
 enum QueryType { CREATE_SCHEMA = 0, SHOW_SCHEMAS, DELETE_SCHEMA, INSERT, PRINT, UPDATE, ERASE };
@@ -43,4 +48,4 @@ class Result {
       : ok_(ok), error_(error), payload_(payload) {}
 };
 
-#endif  // LLP_QUERY_H
+#endif  // LLP_INCLUDE_QUERY_H_

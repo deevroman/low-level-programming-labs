@@ -293,6 +293,22 @@ class Database {
     return Result(false, "Not found");
   }
 
+  Result InsertElement(insert_query args) const {
+    debug("TODO");
+    return Result(false, "Not found");
+  }
+
+  [[nodiscard]] Result GetElements() const {
+    //    std::vector<Element> schemas;
+    //    auto it = SchemasPageIterator(self_ref_);
+    //    for (int i = 0; i < master_header_.schemas_count; i++) {
+    //      schemas.push_back(it.ReadSchema());
+    //    }
+    //    return {false, "", result_payload(elements)};
+    debug("TODO");
+    return Result(false, "Not found");
+  }
+
  public:
   explicit Database(const std::string &file_path, bool overwrite = false) {
     debug("Открытие базы");
@@ -324,7 +340,8 @@ class Database {
         info("Запрос на удаление схемы");
         return DeleteSchema(std::get<delete_schema_query>(q.payload));
       case INSERT:
-        break;
+        info("Запрос на вставку элемента");
+        return InsertElement(std::get<insert_query>(q.payload));
       case PRINT:
         break;
       case UPDATE:
@@ -476,13 +493,13 @@ class Database {
         std::unique_ptr<char[]> zeros(new char[current_page_1.size - current_page_offset_1]{});
         db_->file_->write(zeros.get(), current_page_1.size - current_page_offset_1,
                           current_page_addres_1 + sizeof(page_header) + current_page_offset_1);
-        if (current_page_addres_1 == current_page_addres_2){
+        if (current_page_addres_1 == current_page_addres_2) {
           break;
         }
         current_page_addres_1 = current_page_1.nxt_page;
         db_->file_->read(&current_page_1, sizeof(page_header), current_page_addres_1);
         current_page_offset_1 = 0;
-      } 
+      }
       current_page_1.ind_last_elem = current_page_offset_1;
       db_->file_->write(&current_page_1, sizeof(page_header), current_page_addres_1);
 
