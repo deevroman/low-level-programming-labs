@@ -28,6 +28,7 @@ class SchemaWithPosition : public Schema {
  public:
   DbPtr page_start_{};
   DbPtr position_{};
+  DbSize index_{};
 };
 
 #endif  // LLP_INCLUDE_SCHEMA_H_

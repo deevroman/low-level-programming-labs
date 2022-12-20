@@ -37,7 +37,18 @@ TEST(HelloTest, BasicAssertions) {
                                                                                     }))});
   EXPECT_FALSE(fail.ok_);
 
-  for (auto now : lol) {
+  db.Query({DELETE_SCHEMA, query_payload(delete_schema_query("BOM-BOM-BOM-BOM"))});
+  db.Query({DELETE_SCHEMA, query_payload(delete_schema_query("WEWE-WEWEE-WEWE"))});
+
+  kek = db.GetSchemas();
+  EXPECT_TRUE(kek.ok_);
+  auto lal = std::get<std::vector<Schema>>(kek.payload_);
+  EXPECT_EQ(lal.size(), 1);
+  EXPECT_EQ(lal[0].name_, "SUKO-SUKOO-SUKO");
+  EXPECT_EQ(lal[0].fields_["AHAHA-AHA-AHAHA"], DB_FLOAT);
+  EXPECT_EQ(lal[0].fields_["OLOLOLO-OLOLOLO"], DB_STRING);
+  
+  for (auto now : lal) {
     now.Print();
     std::cout << std::endl;
   }

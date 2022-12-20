@@ -12,7 +12,7 @@ struct page_header {
   page_header() = default;
 
   uint64_t magic_marker{};
-  DbPtr nxt_page{};
+  DbPtr nxt_page{0};
   DbSize size = kDefaultPageSize;
   DbSize ind_last_elem{0};
 

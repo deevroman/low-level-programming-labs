@@ -40,6 +40,12 @@ void _dbg(const char *sdbg, const char *h, TA... a) {
 #endif
 
 #ifdef DEBUG
+#define debug_assert(...) assert(__VA_ARGS__)
+#else
+#define debug_assert(...)
+#endif
+
+#ifdef DEBUG
 #define todo(...) throw std::runtime_error(std::string("line:") + std::to_string(__LINE__) + "," + __VA_ARGS__)
 #else
 #define todo(...)
