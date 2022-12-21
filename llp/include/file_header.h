@@ -22,21 +22,24 @@ struct file_header {
   DbPtr nodes_last_page{};
   DbPtr strings_last_page{};
   DbSize schemas_count{};
+  DbSize counter{};
 
   file_header(int64_t signature, DbPtr file_end, DbSize data_summary_size, DbPtr schemas_first_page,
-              DbPtr nodes_first_page, DbPtr strings_first_page, DbPtr schemas_last_page,
-              DbPtr nodes_last_page, DbPtr strings_last_page) : signature(signature), file_end(file_end),
-                                                                data_summary_size(data_summary_size),
-                                                                schemas_first_page(schemas_first_page),
-                                                                nodes_first_page(nodes_first_page),
-                                                                strings_first_page(strings_first_page),
-                                                                schemas_last_page(schemas_last_page),
-                                                                nodes_last_page(nodes_last_page),
-                                                                strings_last_page(strings_last_page) {}
+              DbPtr nodes_first_page, DbPtr strings_first_page, DbPtr schemas_last_page, DbPtr nodes_last_page,
+              DbPtr strings_last_page)
+      : signature(signature),
+        file_end(file_end),
+        data_summary_size(data_summary_size),
+        schemas_first_page(schemas_first_page),
+        nodes_first_page(nodes_first_page),
+        strings_first_page(strings_first_page),
+        schemas_last_page(schemas_last_page),
+        nodes_last_page(nodes_last_page),
+        strings_last_page(strings_last_page) {}
 
   file_header() = default;
 
 } PACKED;
 #pragma pack(pop)
 
-#endif //LLP_INCLUDE_FILE_HEADER_H_
+#endif  // LLP_INCLUDE_FILE_HEADER_H_

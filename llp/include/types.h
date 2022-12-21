@@ -18,22 +18,25 @@ constexpr size_t Kek(size_t x) {
 }
 
 #ifdef DEBUG
-#define PAD(type, value) \
-char name_##value[16] = #value; \
-char pad_##value[Kek(sizeof(type))]{};type value
+#define PAD(type, value)                 \
+  char name_##value[16] = #value;        \
+  char pad_##value[Kek(sizeof(type))]{}; \
+  type value
 #else
-#define PAD(args) args 
+#define PAD(args) args
 #endif
 
 typedef int8_t Byte;
 typedef int64_t DbPtr;
 typedef int64_t DbSize;
 
-enum PrimeTypes {
-  DB_INT_32 = 0,
-  DB_FLOAT,
-  DB_STRING,
-  DB_BOOL
+enum PrimeTypes { DB_INT_32 = 0, DB_DOUBLE, DB_STRING, DB_BOOL };
+
+union ElementData {
+  int32_t i_;
+  double d_;
+  DbPtr str_;
+  bool b_;
 };
 
-#endif //LLP_INCLUDE_TYPES_H_
+#endif  // LLP_INCLUDE_TYPES_H_

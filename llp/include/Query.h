@@ -11,12 +11,18 @@
 
 typedef std::variant<int32_t, double, std::string, bool> data_item;
 
+struct Element {
+  long long id;
+  DbPtr child_link;
+  DbPtr next_brother_link;
+};
+
 struct insert_query {
-  std::string path;
+  DbSize parent_id;
   std::string type;
   std::map<std::string, data_item> fields;
-  insert_query(std::string path, std::string type, const std::map<std::string, data_item> &fields)
-      : path(std::move(path)), type(std::move(type)), fields(fields) {}
+  insert_query(DbSize parent_id, std::string type, const std::map<std::string, data_item> &fields)
+      : parent_id(parent_id), type(std::move(type)), fields(fields) {}
 };
 
 enum QueryType { CREATE_SCHEMA = 0, SHOW_SCHEMAS, DELETE_SCHEMA, INSERT, PRINT, UPDATE, ERASE };
