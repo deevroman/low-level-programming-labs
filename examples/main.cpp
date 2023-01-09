@@ -12,24 +12,16 @@ int main(int argc, char *argv[]) {
     return 0;
   }
   Database db = Database(argv[1], true);
-  db.Query({CREATE_SCHEMA, query_payload(
-      create_schema_query(
-          "BOM-BOM-BOM-BOM",
-          {
-              {"pole_poolyushko", DB_INT_32},
-              {"bool_poolyushko", DB_BOOL},
-          }
-      )
-  )});
-  db.Query({CREATE_SCHEMA, query_payload(
-      create_schema_query(
-          "SUKO-SUKOO-SUKO",
-          {
-              {"AHAHA-AHA-AHAHA", DB_FLOAT},
-              {"OLOLOLO-OLOLOLO", DB_STRING},
-          }
-      )
-  )});
+  db.CreateSchema({"BOM-BOM-BOM-BOM",
+                   {
+                       {"pole_poolyushko", DB_INT_32},
+                       {"bool_poolyushko", DB_BOOL},
+                   }});
+  db.CreateSchema({"SUKO-SUKOO-SUKO",
+                   {
+                       {"AHAHA-AHA-AHAHA", DB_DOUBLE},
+                       {"OLOLOLO-OLOLOLO", DB_STRING},
+                   }});
   auto kek = db.GetSchemas();
   auto lol = std::get<std::vector<Schema>>(kek.payload_);
 

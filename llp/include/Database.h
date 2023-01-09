@@ -327,7 +327,7 @@ void Database::RewriteStruct(void *target_struct, DbSize size, DbPtr start) {  /
 Byte *Database::ReadStruct(DbPtr target_struct) const {
   std::vector<PageChunk> buffer;
   while (target_struct != 0) {
-    buffer.push_back({});
+    buffer.emplace_back();
     this->file_->read(&(buffer.back()), sizeof(PageChunk), target_struct);
     target_struct = buffer.back().nxt_chunk;
   }
