@@ -241,6 +241,7 @@ DbPtr Database::AllocPage(FileChunkedList<PageMarker> &elements_list, DbSize siz
 
 template <uint64_t PageMarker>
 DbPtr Database::WriteStruct(void *target_struct, DbSize size, FileChunkedList<PageMarker> &elements_list) {
+  debug("Записываю в файл структуру", target_struct, size, elements_list.first_element, elements_list.first_free_element);
   assert(elements_list.first_free_element);
   assert(size != 0);
   DbPtr result_position = elements_list.first_free_element;

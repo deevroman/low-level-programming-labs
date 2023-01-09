@@ -21,7 +21,7 @@ const DbSize kChunkDataSize = sizeof(DbPtr);
 
 #pragma pack(push, 1)
 struct PageChunk {
-  PAD(DbPtr, nxt_chunk);
+  PAD(DbPtr, nxt_chunk){};
   Byte data[kChunkDataSize]{};  // xxx
 } PACKED;
 #pragma pack(pop)
