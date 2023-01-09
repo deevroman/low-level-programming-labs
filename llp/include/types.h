@@ -1,9 +1,6 @@
 #ifndef LLP_INCLUDE_TYPES_H_
 #define LLP_INCLUDE_TYPES_H_
 
-#include <x86intrin.h>
-#include "immintrin.h"
-
 #include <cstdint>
 
 #ifdef __GNUC__
