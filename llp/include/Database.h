@@ -83,11 +83,6 @@ class Database {
 
    public:
     ListIterator(Database *db, FileChunkedList<PageMarker> head);
-    //    SchemasPageIterator(Database *db, const SchemaWithPosition &sh)
-    //        : db_(db),
-    //          current_page_address_(sh.page_start_),
-    //          current_page_offset_(sh.position_ - (sh.page_start_ + sizeof(page_header))),
-    //          cur_(sh.index_) {}
 
     void Next();
 
@@ -241,7 +236,7 @@ DbPtr Database::AllocPage(FileChunkedList<PageMarker> &elements_list, DbSize siz
 
 template <uint64_t PageMarker>
 DbPtr Database::WriteStruct(void *target_struct, DbSize size, FileChunkedList<PageMarker> &elements_list) {
-  debug("Записываю в файл структуру", target_struct, size, elements_list.first_element, elements_list.first_free_element);
+  debug("Записываю в файл структуру", size, elements_list.first_element, elements_list.first_free_element);
   assert(elements_list.first_free_element);
   assert(size != 0);
   DbPtr result_position = elements_list.first_free_element;
@@ -258,6 +253,7 @@ DbPtr Database::WriteStruct(void *target_struct, DbSize size, FileChunkedList<Pa
     }
     cur_chunk.nxt_chunk = next_chunk.nxt_chunk;
     std::copy(byted_target_struct + i, byted_target_struct + i + kChunkDataSize, cur_chunk.data);
+    debug("Занимаю чанк с", next_free);
     this->file_->write(&cur_chunk, sizeof(PageChunk), next_free);
     next_free = next_chunk.nxt_chunk;
   }
@@ -266,10 +262,12 @@ DbPtr Database::WriteStruct(void *target_struct, DbSize size, FileChunkedList<Pa
   cur_chunk.nxt_chunk = 0;
   std::fill(cur_chunk.data, cur_chunk.data + sizeof(cur_chunk.data), 0);
   std::copy(byted_target_struct + i, byted_target_struct + std::min(i + kChunkDataSize, size), cur_chunk.data);
+  debug("Занимаю послений чанк структуры", next_free);
   this->file_->write(&cur_chunk, sizeof(PageChunk), next_free);
 
   elements_list.first_element = result_position;
   elements_list.first_free_element = next_chunk.nxt_chunk;
+  debug(elements_list.first_element, elements_list.first_free_element);
   if (elements_list.first_free_element == 0) {
     AllocPage(elements_list);
   }
@@ -348,50 +346,12 @@ std::string Database::ReadString(const DbPtr ptr) const {
   return result;
 }
 
-SchemaHeader Database::ReadSchema(const DbPtr ptr) const {
-  assert(ptr > 0);
-  std::unique_ptr<Byte[]> buffer(ReadStruct(ptr));
-  return {buffer.get()};
-}
 
 DbPtr Database::SaveString(const std::string &s) {
   debug("Сохраняю строку", s);
   assert(master_header_.strings.first_free_element != 0);
   return WriteStruct((void *)s.c_str(), s.size() + 1, master_header_.strings);
 }
-// DbPtr Database::SaveString(const std::string &s) {
-//   debug("Сохраняю строку", s);
-//   DbPtr result = -1;
-//   assert(master_header_.strings_first_free_chunk != 0);
-//
-//   this->file_->read(&slp, sizeof(page_header), master_header_.strings_last_page);
-//   string_header_chunk to_save;
-//   if (slp.GetFreeSpace() < sizeof(string_header_chunk) + s.size() + 1) {
-//     // XXX
-//     auto last_string_page = master_header_.strings_last_page;
-//     master_header_.strings_last_page = AllocPage(MakeStringsPageHeader(), master_header_.strings_first_free_chunk);
-//     slp.nxt_page = master_header_.strings_last_page;
-//     this->file_->write(&slp, sizeof(page_header), last_string_page);
-//     this->file_->read(&slp, sizeof(page_header), master_header_.strings_last_page);
-//   }
-//   if (slp.GetFreeSpace() >= sizeof(string_header_chunk) + s.size() + 1) {
-//     to_save.is_chunk = false;
-//     to_save.size = s.size();
-//     to_save.nxt_chunk = 0;
-//     this->file_->write(&to_save, sizeof(string_header_chunk),
-//                        master_header_.strings_last_page + sizeof(page_header) + slp.ind_last_elem);
-//     result = master_header_.strings_last_page + sizeof(page_header) + slp.ind_last_elem;
-//     this->file_->write((void *)s.c_str(), to_save.size + 1);
-//     slp.ind_last_elem += sizeof(string_header_chunk) + to_save.size + 1;
-//   } else {
-//     todo("oops");
-//   }
-//   this->file_->write(&slp, sizeof(page_header), master_header_.strings_last_page);
-//   file_->write(&master_header_, sizeof(master_header_), 0);
-//   assert(result != -1);
-//   debug("Строка сохранена");
-//   return result;
-// }
 
 Database::Database(const std::string &file_path, bool overwrite) {
   debug("Открытие базы");
@@ -555,33 +515,6 @@ void Database::RemoveString(DbPtr ptr) {
   CleanStruct<kStringsPageMarker>(ptr, master_header_.strings);
 }
 
-// void Database::AllocPagesForSize(page_header &start_page, DbSize requested_size) {
-//   debug("Создаю страницы под", requested_size);
-//
-//   page_header current_page = start_page;
-//   requested_size -= start_page.GetFreeSpace();
-//
-//   // для переиспользования освобождённых
-//   while (current_page.nxt_page != 0) {
-//     requested_size -= start_page.size;
-//     file_->read(&current_page, sizeof(page_header), current_page.nxt_page);
-//   }
-//
-//   while (requested_size > 0) {
-//     auto last_schemas_page = master_header_.schemas_last_page;
-//
-//     auto new_page = MakeSchemasPageHeader();
-//     master_header_.schemas_last_page = AllocPage(new_page, master_header_.schemas_first_free_chunk);
-//     requested_size -= kDefaultPageSize;
-//     current_page.nxt_page = master_header_.schemas_last_page;
-//     this->file_->write(&current_page, sizeof(page_header), last_schemas_page);
-//
-//     current_page = new_page;
-//   }
-//
-//   debug("Страницы созданы");
-// }
-
 Result Database::GetSchemaByName(const std::string &name) const {
   debug("Поиск схемы с именем", name);
   ListIterator<kSchemasPageMarker, Schema> it{self_ref_, master_header_.schemas};
@@ -601,135 +534,5 @@ void Database::UpdateMasterHeader() {
   this->file_->write(&master_header_, sizeof(master_header_), 0);
 }
 
-// SchemaHeader Database::SchemasPageIterator::ReadSchemaHeader() {
-////  debug("Чтение хедера схемы");
-////  raw_schema_header raw_header;
-////  db_->file_->read(&raw_header, sizeof(raw_schema_header),
-////                   current_page_address_ + sizeof(page_header) + current_page_offset_);
-////  current_page_offset_ += sizeof(raw_schema_header);
-////
-////  debug("Чтение кусков полей схемы");
-////  SchemaHeader header(raw_header.name, raw_header.size);
-////  auto *schema_key_value_buffer = header.fields_;
-////  auto need_read_bytes = header.size_ * (DbSize)sizeof(schema_key_value);
-////  while (need_read_bytes > 0) {
-////    auto now_can_read_bytes = std::min(need_read_bytes, kDefaultPageSize - current_page_offset_);
-////    db_->file_->read(schema_key_value_buffer, now_can_read_bytes,
-////                     current_page_address_ + sizeof(page_header) + current_page_offset_);
-////    schema_key_value_buffer += now_can_read_bytes / sizeof(schema_key_value);
-////    current_page_offset_ += now_can_read_bytes;
-////    need_read_bytes -= now_can_read_bytes;
-////
-////    if (need_read_bytes) {
-////      current_page_address_ = current_page_.nxt_page;
-////      db_->file_->read(&current_page_, sizeof(page_header), current_page_address_);
-////
-////      current_page_offset_ = 0;
-////    }
-////  }
-////  current_page_offset_ += header.GetFlexiblePadding();
-////  return header;
-//}
-
-// SchemaWithPosition Database::SchemasPageIterator::ReadSchema() {
-//   debug("Читаю схему номер", cur_, current_page_address_, current_page_offset_);
-//
-//   if (cur_ >= db_->master_header_.schemas.count) {
-//     debug("Итератор вышел за границу");
-//     return {};
-//   }
-//   db_->file_->read(&current_page_, sizeof(page_header), current_page_address_);
-//
-//   SchemaWithPosition result;
-//   result.page_start_ = current_page_address_;
-//   result.position_ = current_page_address_ + sizeof(page_header) + current_page_offset_;
-//
-//   auto header = ReadSchemaHeader();
-//
-//   debug("Чтение названия и названий ключей схемы");
-//   result.name_ = db_->ReadString(header.name_);
-//   for (int i = 0; i < header.size_; i++) {
-//     result.fields_[db_->ReadString(header.fields_[i].key)] = header.fields_[i].value_type;
-//   }
-//   cur_++;
-//   debug("Схема прочитана", result.name_);
-//   return result;
-// }
-
-// void Database::SchemasPageIterator::RemoveSchemaAndShift() {
-//   //  debug("Удаляю схему номер", cur_, current_page_address_, current_page_offset_);
-//   //
-//   //  if (cur_ >= db_->master_header_.schemas_count) {
-//   //    debug("Итератор вышел за границу");
-//   //    return;
-//   //  }
-//   //  db_->file_->read(&current_page_, sizeof(page_header), current_page_address_);
-//   //
-//   //  auto current_page_address_1 = current_page_address_;
-//   //  auto current_page_offset_1 = current_page_offset_;
-//   //  auto current_page_1 = current_page_;
-//   //
-//   //  auto header = ReadSchemaHeader();
-//   //  auto current_page_address_2 = current_page_address_;
-//   //  auto current_page_offset_2 = current_page_offset_;
-//   //  auto current_page_2 = current_page_;
-//   //
-//   //  debug("Удаляю ссылки на строки в схеме");
-//   //  db_->RemoveString(header.name_);
-//   //  for (int i = 0; i < header.size_; i++) {
-//   //    db_->RemoveString(header.fields_[i].key);
-//   //  }
-//   //
-//   //  (db_->master_header_.schemas_count)--;
-//   //  db_->file_->write(&(db_->master_header_), sizeof(master_header_), 0);
-//   //
-//   //  debug("Сдвигаю элементы схемы");
-//   //  DbSize shift_step = sizeof(raw_schema_header);
-//   //  std::unique_ptr<char[]> buffer(new char[shift_step]{});
-//   //  while (current_page_2.nxt_page != 0 || current_page_offset_2 != current_page_2.ind_last_elem) {
-//   //    if (current_page_offset_1 == current_page_1.size) {
-//   //      current_page_address_1 = current_page_1.nxt_page;
-//   //      db_->file_->read(&current_page_1, sizeof(page_header), current_page_address_1);
-//   //      current_page_offset_1 = 0;
-//   //    }
-//   //
-//   //    if (current_page_offset_2 == current_page_2.size) {
-//   //      current_page_address_2 = current_page_2.nxt_page;
-//   //      db_->file_->read(&current_page_2, sizeof(page_header), current_page_address_2);
-//   //      current_page_offset_2 = 0;
-//   //    }
-//   //
-//   //    db_->file_->read(buffer.get(), shift_step, current_page_address_2 + sizeof(page_header) +
-//   //    current_page_offset_2); db_->file_->write(buffer.get(), shift_step, current_page_address_1 +
-//   sizeof(page_header)
-//   //    + current_page_offset_1);
-//   //
-//   //    current_page_offset_1 += shift_step;
-//   //    current_page_offset_2 += shift_step;
-//   //  }
-//   //  current_page_1.ind_last_elem = current_page_offset_1;
-//   //  db_->file_->write(&current_page_1, sizeof(page_header), current_page_address_1);
-//   //
-//   //  debug("Обновляю последнюю страницу");
-//   //  db_->master_header_.schemas_last_page = current_page_address_1;
-//   //  db_->file_->write(&(db_->master_header_), sizeof(master_header_), 0);
-//   //
-//   //  debug("Затираю освободившееся место");
-//   //  while (current_page_address_1 != 0) {
-//   //    std::unique_ptr<char[]> zeros(new char[current_page_1.size - current_page_offset_1]{});
-//   //    db_->file_->write(zeros.get(), current_page_1.size - current_page_offset_1,
-//   //                      current_page_address_1 + sizeof(page_header) + current_page_offset_1);
-//   //    if (current_page_address_1 == current_page_address_2) {
-//   //      break;
-//   //    }
-//   //    current_page_address_1 = current_page_1.nxt_page;
-//   //    db_->file_->read(&current_page_1, sizeof(page_header), current_page_address_1);
-//   //    current_page_offset_1 = 0;
-//   //  }
-//   //  current_page_1.ind_last_elem = current_page_offset_1;
-//   //  db_->file_->write(&current_page_1, sizeof(page_header), current_page_address_1);
-//   //
-//   //  debug("Схемы сдвинуты");
-// }
 
 #endif  // LLP_INCLUDE_DATABASE_H_

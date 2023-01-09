@@ -4,6 +4,8 @@
 #include <exception>
 #include <iostream>
 
+#include "types.h"
+
 #ifndef __FILE_NAME__
 #define __FILE_NAME__ __FILE__
 #endif
@@ -16,6 +18,10 @@ void _dbg(const char *sdbg, TH h) {
 
 void _dbg(const char *sdbg, const char *h) { std::cerr << h << std::endl; }
 
+void _dbg(const char *sdbg, DbPtr h) {
+  std::cerr << sdbg << '=' << std::hex << h << std::dec << "(" << h << ")" << std::endl;
+}
+
 template <class... TA>
 void _dbg(const char *sdbg, const char *h, TA... a);
 
@@ -23,6 +29,13 @@ template <class TH, class... TA>
 void _dbg(const char *sdbg, TH h, TA... a) {
   while (*sdbg != ',') std::cerr << *sdbg++;
   std::cerr << '=' << h << ',';
+  _dbg(sdbg + 1, a...);
+}
+
+template <class... TA>
+void _dbg(const char *sdbg, DbPtr h, TA... a) {
+  while (*sdbg != ',') std::cerr << *sdbg++;
+  std::cerr << '=' << std::hex << h << std::dec << "(" << h << ")" << ',';
   _dbg(sdbg + 1, a...);
 }
 
