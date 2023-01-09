@@ -23,14 +23,14 @@ class SchemaHeader {
 
   [[nodiscard]] DbSize GetFlexibleElementSize() const { return size_ * sizeof(schema_key_value); }
 
-  Byte *MakePackedSchema() const {
+  [[nodiscard]] Byte *MakePackedSchema() const {
     Byte *buffer = new Byte[GetOnFileSize()];
     *reinterpret_cast<raw_schema_header *>(buffer) = raw_schema_header(name_, size_, nxt_);
     std::copy(fields_, fields_ + size_, (schema_key_value *)((buffer + sizeof(raw_schema_header))));
     return buffer;
   }
 
-  SchemaHeader(Byte *buffer) {
+  explicit SchemaHeader(Byte *buffer) {
     name_ = reinterpret_cast<raw_schema_header *>(buffer)->name;
     size_ = reinterpret_cast<raw_schema_header *>(buffer)->size;
     nxt_ = reinterpret_cast<raw_schema_header *>(buffer)->nxt;
@@ -38,6 +38,23 @@ class SchemaHeader {
     auto from = (schema_key_value *)((buffer + sizeof(raw_schema_header)));
     std::copy(from, from + size_, fields_);
   };
+
+#ifdef DEBUG
+  bool Validate(FileInterface &f) const {
+    for (int i = 0; i < size_; i++) {
+      if (!f.calls_ptrs_.contains(fields_[i].key)) {
+        debug("Invalid", fields_[i].key, i);
+        return false;
+      }
+    }
+    if (f.calls_ptrs_.contains(name_) && f.calls_ptrs_.contains(nxt_)) {
+      return true;
+    } else {
+      debug("Invalid", f.calls_ptrs_.contains(name_), f.calls_ptrs_.contains(nxt_));
+      return false;
+    }
+  }
+#endif
 };
 
 #endif  // LLP_INCLUDE_SCHEMAHEADER_H_

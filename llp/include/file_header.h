@@ -20,22 +20,6 @@ struct file_header {
   FileChunkedList<kStringsPageMarker> strings;
   DbSize id_counter{1};
 
-  //  DbPtr schemas_first_chunk;
-  //  DbPtr schemas_first_free_chunk;
-  //  DbPtr nodes_first_chunk;
-  //  DbPtr nodes_first_free_chunk;
-  //  DbPtr strings_first_chunk;
-  //  DbPtr strings_first_free_chunk;
-
-  //  DbPtr schemas_first_page{};  // xxx
-  //
-  //  DbPtr nodes_first_page{};
-  //  DbPtr strings_first_page{};
-  // позиции последних страниц заданного типа
-  //  DbPtr schemas_last_page{};
-  //  DbPtr nodes_last_page{};
-  //  DbPtr strings_last_page{};
-
   file_header() = default;
 
 } PACKED;

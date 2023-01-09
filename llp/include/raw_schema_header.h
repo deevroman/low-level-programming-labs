@@ -6,7 +6,7 @@
 struct raw_schema_header {
   PAD(DbPtr, name);
   PAD(DbSize, size);
-  PAD(DbSize, nxt);
+  PAD(DbPtr, nxt);
   raw_schema_header(DbPtr name, DbSize size, DbPtr nxt) : name(name), size(size), nxt(nxt) {}
 } PACKED;
 #pragma pack(pop)

@@ -1,5 +1,5 @@
-#ifndef LLP_INCLUDE_ELEMENT_HEADER_CHUNK_H_
-#define LLP_INCLUDE_ELEMENT_HEADER_CHUNK_H_
+#ifndef LLP_INCLUDE_RAW_ELEMENT_HEADER_H_
+#define LLP_INCLUDE_RAW_ELEMENT_HEADER_H_
 #include "types.h"
 
 #pragma pack(push, 1)
@@ -24,4 +24,4 @@ struct element_value {
 } PACKED;
 #pragma pack(pop)
 
-#endif  // LLP_INCLUDE_ELEMENT_HEADER_CHUNK_H_
+#endif  // LLP_INCLUDE_RAW_ELEMENT_HEADER_H_

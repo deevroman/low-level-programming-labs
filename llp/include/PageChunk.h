@@ -11,18 +11,15 @@ const DbSize kChunkDataSize = kDefaultChunkSize - CalcPadding(sizeof(DbPtr)) - s
 const DbSize kChunkDataSize = sizeof(DbPtr);
 #endif
 
-//#pragma pack(push, 1)
-//struct PageChunkLink {
-//  DbPtr page_;
-//  DbPtr ptr_;
-//  const bool isNull() { return page_ && ptr_; }
-//} PACKED;
-//#pragma pack(pop)
-
 #pragma pack(push, 1)
 struct PageChunk {
   PAD(DbPtr, nxt_chunk){};
-  Byte data[kChunkDataSize]{};  // xxx
+  Byte data[kChunkDataSize]{};
+#ifdef DEBUG
+  bool validate(FileInterface &f){
+    return f.calls_ptrs_.contains(nxt_chunk);
+  }
+#endif
 } PACKED;
 #pragma pack(pop)
 

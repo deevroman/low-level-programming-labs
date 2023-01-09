@@ -1,45 +1,27 @@
-#ifndef EXAMPLES_FILE_INTERFACE_H
-#define EXAMPLES_FILE_INTERFACE_H
+#ifndef LLP_INCLUDE_FILEINTERFACE_H_
+#define LLP_INCLUDE_FILEINTERFACE_H_
 
-#include <string>
-// #include <sys/fcntl.h>
-// #include <sys/stat.h>
-// #include <fcntl.h>
-// #include <sys/types.h>
-// #include <unistd.h>
 #include <cstring>
-// #include <csignal>
+#include <string>
+#include <set>
+#include <utility>
+
+
 #include "logger.h"
 #include "types.h"
 
 #define __builtin_FILE() (strrchr(__FILE__, '/') ? strrchr(__builtin_FILE(), '/') + 1 : __builtin_FILE())
 
-class AbstractStorage {
+class FileInterface {
  public:
-  virtual ~AbstractStorage() = default;
-
- private:
-#ifdef DEBUG
-  virtual void write(void *ptr, size_t size, const DbPtr position = -1, const char *caller = __builtin_FUNCTION(),
-                     const char *file = __builtin_FILE(), int line = __builtin_LINE()) = 0;
-#else
-  virtual void write(void *ptr, size_t size, const DbPtr position = -1) = 0;
-#endif
-
-#ifdef DEBUG
-  virtual void read(void *buffer, size_t size, DbPtr position, const char *caller = __builtin_FUNCTION(),
-                    const char *file = __builtin_FILE(), int line = __builtin_LINE()) = 0;
-#else
-  virtual void read(void *buffer, size_t size, DbPtr position) = 0;
-#endif
-};
-
-class FileInterface : public AbstractStorage {
- public:  // XXX
   FILE *fd_;
+#ifdef DEBUG
+  mutable std::set<std::pair<DbPtr, DbSize>> calls_;
+  mutable std::set<DbPtr> calls_ptrs_;
+#endif
 
  public:
-  ~FileInterface() override {
+  ~FileInterface() {
     if (fd_ != nullptr) {
       fclose(fd_);
     }
@@ -60,13 +42,15 @@ class FileInterface : public AbstractStorage {
   }
 
 #ifdef DEBUG
-  void write(void *ptr, size_t size, const DbPtr position = -1, const char *caller = __builtin_FUNCTION(),
-             const char *file = __builtin_FILE(), int line = __builtin_LINE()) override {
+  void Write(void *ptr, size_t size, DbPtr position = -1, const char *caller = __builtin_FUNCTION(),
+             const char *file = __builtin_FILE(), int line = __builtin_LINE()) const {
     std::string from = std::string(file) + ":" + std::to_string(line);
-    debug("write", position, size, from, caller);
-    if (position == 0 && std::string(caller) != "UpdateMasterHeader"){
+    debug("Write", position, size, from, caller);
+    if (position == 0 && std::string(caller) != "UpdateMasterHeader") {
       error("0 position not from UpdateMasterHeader");
     }
+    calls_.insert({position, size});
+    calls_ptrs_.insert(position);
 #else
   void write(void *ptr, size_t size, const DbPtr position = -1) override {
 #endif
@@ -82,10 +66,13 @@ class FileInterface : public AbstractStorage {
   }
 
 #ifdef DEBUG
-  void read(void *buffer, size_t size, DbPtr position = -1, const char *caller = __builtin_FUNCTION(),
-            const char *file = __builtin_FILE(), int line = __builtin_LINE()) override {
+  void Read(void *buffer, size_t size, DbPtr position = -1, const char *caller = __builtin_FUNCTION(),
+            const char *file = __builtin_FILE(), int line = __builtin_LINE()) const {
     std::string from = std::string(file) + ":" + std::to_string(line);
-    debug("read", position, size, from, caller);
+    debug("Read", position, size, from, caller);
+    if(!calls_.contains({position, size})){
+      error("Bad read");
+    }
 #else
   void read(void *buffer, size_t size, DbPtr position = -1) override {
 #endif
@@ -93,9 +80,9 @@ class FileInterface : public AbstractStorage {
       fseek(fd_, position, SEEK_SET);
     }
     if (fread(buffer, size, 1, fd_) != 1) {
-      error("not read");
+      error("not Read");
     }
   }
 };
 
-#endif  // EXAMPLES_FILE_INTERFACE_H
+#endif  // LLP_INCLUDE_FILEINTERFACE_H_

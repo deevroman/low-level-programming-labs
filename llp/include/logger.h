@@ -10,7 +10,6 @@
 #define __FILE_NAME__ __FILE__
 #endif
 
-// #define debug(x) std::cout << #x << ": " << x << endl;
 template <class TH>
 void _dbg(const char *sdbg, TH h) {
   std::cerr << sdbg << '=' << h << std::endl;
@@ -66,7 +65,7 @@ void _dbg(const char *sdbg, const char *h, TA... a) {
 
 #include <string_view>
 
-void info(std::string_view s) { std::cerr << s << std::endl; }
+void Info(std::string_view s) { std::cerr << s << std::endl; }
 
 #define error(...) \
   throw std::runtime_error(std::string("line:") + __FILE__ ":" + std::to_string(__LINE__) + "," + __VA_ARGS__)

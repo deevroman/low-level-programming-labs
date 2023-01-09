@@ -10,22 +10,12 @@ const uint64_t kStringsPageMarker = 0xCCCCCCCCCCCCCCCC;
 
 #pragma pack(push, 1)
 struct page_header {
-  page_header() = default;
-
   uint64_t magic_marker{};
   DbPtr nxt_page{0}; // TODO
   DbSize size = kDefaultPageSize;
-//  DbSize ind_last_elem{0};
-
+  
+  page_header() = default;
   explicit page_header(uint64_t magic_marker) : magic_marker(magic_marker) {}
-
-  //  [[nodiscard]] DbSize GetFreeSpace() const {
-  // #ifdef DEBUG
-  //    assert(size >= ind_last_elem);
-  // #endif
-  //    return size - ind_last_elem;
-  //  }
-
 } PACKED;
 #pragma pack(pop)
 

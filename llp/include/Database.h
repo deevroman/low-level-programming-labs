@@ -43,13 +43,12 @@ class Database {
 
   DbPtr SaveSchema(const SchemaHeader &sh);
 
-  //  DbPtr SaveElement(const ElementHeader &sh);
   template <uint64_t PageMarker>
   DbPtr WriteStruct(void *target_struct, DbSize size, FileChunkedList<PageMarker> &elements_list);
 
-  Byte *ReadStruct(DbPtr target_struct) const;
+  [[nodiscard]] Byte *ReadStruct(DbPtr target_struct) const;
 
-  void RewriteStruct(void *target_struct, DbSize size, DbPtr start);
+  void RewriteStruct(void *target_struct, DbSize size, DbPtr start) const;
 
   template <uint64_t PageMarker>
   void CleanStruct(DbPtr target_struct, FileChunkedList<PageMarker> &elements_list);
@@ -58,9 +57,9 @@ class Database {
   explicit Database(const std::string &file_path, bool overwrite = false);
 
   virtual ~Database() { delete file_; }
-  
+
   void UpdateMasterHeader();
-  
+
   Result CreateSchema(const create_schema_query &args);
 
   Result DeleteSchema(const delete_schema_query &name);
@@ -69,7 +68,7 @@ class Database {
 
   [[nodiscard]] Result GetSchemaByName(const std::string &name) const;
 
-  Result InsertElement(insert_query args) const;
+  [[nodiscard]] Result InsertElement(insert_query args) const;
 
   [[nodiscard]] Result GetElements() const;
 
@@ -90,7 +89,6 @@ class Database {
 
     void Remove();
   };
-  SchemaHeader ReadSchema(const DbPtr ptr) const;
 };
 
 template <uint64_t PageMarker, class Element>
@@ -98,6 +96,8 @@ void Database::ListIterator<PageMarker, Element>::Remove() {
   debug("Удаляю схему номер", cur_index_);
   std::unique_ptr<Byte[]> buffer(this->db_->ReadStruct(current_ptr_));
   auto unpacked_schema = SchemaHeader(buffer.get());
+  debug_assert(unpacked_schema.Validate(*this->db_->file_));
+  
 
   debug("Удаляю ссылки на строки в схеме");
   db_->RemoveString(unpacked_schema.name_);
@@ -109,6 +109,7 @@ void Database::ListIterator<PageMarker, Element>::Remove() {
     // прочесть предыдущую схему и изменить ссылку
     std::unique_ptr<Byte[]> buffer_2(this->db_->ReadStruct(prev_ptr_));
     auto unpacked_schema_2 = SchemaHeader(buffer_2.get());
+    debug_assert(unpacked_schema_2.Validate(*this->db_->file_));
     unpacked_schema_2.nxt_ = unpacked_schema.nxt_;
     // записать обратно предыдущую
     auto raw = std::unique_ptr<Byte[]>(unpacked_schema_2.MakePackedSchema());
@@ -130,6 +131,7 @@ Element Database::ListIterator<PageMarker, Element>::Read() {
   std::unique_ptr<Byte[]> buffer(this->db_->ReadStruct(current_ptr_));
   if (PageMarker == kSchemasPageMarker) {
     auto unpacked_schema = SchemaHeader(buffer.get());
+    debug_assert(unpacked_schema.Validate(*this->db_->file_));
     auto result = Element();
     result.name_ = db_->ReadString(unpacked_schema.name_);
     for (int i = 0; i < unpacked_schema.size_; i++) {
@@ -162,7 +164,7 @@ Database::ListIterator<PageMarker, Element>::ListIterator(Database *db, FileChun
 
 bool Database::Load() {
   try {
-    file_->read(&master_header_, sizeof(file_header), 0);
+    file_->Read(&master_header_, sizeof(file_header), 0);
   } catch (std::runtime_error &e) {
     return false;
   }
@@ -214,7 +216,7 @@ DbPtr Database::AllocPage(FileChunkedList<PageMarker> &elements_list, DbSize siz
   assert(size / sizeof(PageChunk) > 0);
   size = std::max(size, kDefaultPageSize);
   auto header = elements_list.MakePageHeader();  // нужны ли ссылки между страницами?
-  file_->write(&header, sizeof(page_header), master_header_.file_end);
+  file_->Write(&header, sizeof(page_header), master_header_.file_end);
 
   auto chunk_cnt = size / sizeof(PageChunk);
   std::unique_ptr<PageChunk[]> buffer(new PageChunk[chunk_cnt]{});
@@ -222,10 +224,14 @@ DbPtr Database::AllocPage(FileChunkedList<PageMarker> &elements_list, DbSize siz
   cur_chunk.nxt_chunk = master_header_.file_end + sizeof(page_header);
   for (DbSize i = 0; i < chunk_cnt; i++) {
     cur_chunk.nxt_chunk += sizeof(PageChunk);
+#ifdef DEBUG
+    file_->calls_.insert({master_header_.file_end + sizeof(page_header) + sizeof(PageChunk) * i, sizeof(PageChunk)});
+    file_->calls_ptrs_.insert(master_header_.file_end + sizeof(page_header) + sizeof(PageChunk) * i);
+#endif
     buffer.get()[i] = cur_chunk;
   }
   buffer.get()[chunk_cnt - 1].nxt_chunk = elements_list.first_free_element;
-  file_->write(buffer.get(), size);
+  file_->Write(buffer.get(), size);
 
   auto re = master_header_.file_end;
   elements_list.first_free_element = master_header_.file_end + sizeof(page_header);
@@ -246,24 +252,24 @@ DbPtr Database::WriteStruct(void *target_struct, DbSize size, FileChunkedList<Pa
   PageChunk cur_chunk, next_chunk;
   int i = 0;
   for (; i + kChunkDataSize < size; i += kChunkDataSize) {
-    this->file_->read(&next_chunk, sizeof(PageChunk), next_free);
+    this->file_->Read(&next_chunk, sizeof(PageChunk), next_free);
     if (next_chunk.nxt_chunk == 0) {
       AllocPage(elements_list);
       next_chunk.nxt_chunk = elements_list.first_free_element;
     }
     cur_chunk.nxt_chunk = next_chunk.nxt_chunk;
     std::copy(byted_target_struct + i, byted_target_struct + i + kChunkDataSize, cur_chunk.data);
-    debug("Занимаю чанк с", next_free);
-    this->file_->write(&cur_chunk, sizeof(PageChunk), next_free);
+    debug("Занимаю чанк с", next_free, next_chunk.nxt_chunk);
+    this->file_->Write(&cur_chunk, sizeof(PageChunk), next_free);
     next_free = next_chunk.nxt_chunk;
   }
   // последний чанк должен указывать на голову списка
-  this->file_->read(&next_chunk, sizeof(PageChunk), next_free);
+  this->file_->Read(&next_chunk, sizeof(PageChunk), next_free);
   cur_chunk.nxt_chunk = 0;
   std::fill(cur_chunk.data, cur_chunk.data + sizeof(cur_chunk.data), 0);
   std::copy(byted_target_struct + i, byted_target_struct + std::min(i + kChunkDataSize, size), cur_chunk.data);
-  debug("Занимаю послений чанк структуры", next_free);
-  this->file_->write(&cur_chunk, sizeof(PageChunk), next_free);
+  debug("Занимаю последний чанк структуры", next_free, next_chunk.nxt_chunk);
+  this->file_->Write(&cur_chunk, sizeof(PageChunk), next_free);
 
   elements_list.first_element = result_position;
   elements_list.first_free_element = next_chunk.nxt_chunk;
@@ -284,10 +290,10 @@ void Database::CleanStruct(DbPtr target_struct, FileChunkedList<PageMarker> &ele
   PageChunk cur_chunk;
   DbPtr next_chunk;
   while (true) {
-    this->file_->read(&cur_chunk, sizeof(PageChunk), target_struct);
+    this->file_->Read(&cur_chunk, sizeof(PageChunk), target_struct);
     next_chunk = cur_chunk.nxt_chunk;
     std::fill(cur_chunk.data, cur_chunk.data + sizeof(cur_chunk.data), 0);
-    this->file_->write(&cur_chunk, sizeof(PageChunk), target_struct);
+    this->file_->Write(&cur_chunk, sizeof(PageChunk), target_struct);
     if (next_chunk == 0) {
       break;
     }
@@ -295,11 +301,11 @@ void Database::CleanStruct(DbPtr target_struct, FileChunkedList<PageMarker> &ele
   }
   // последний чанк должен указывать на старый пустой чанк-кандидат
   cur_chunk.nxt_chunk = old_free_start;
-  this->file_->write(&cur_chunk, sizeof(PageChunk), target_struct);
+  this->file_->Write(&cur_chunk, sizeof(PageChunk), target_struct);
   UpdateMasterHeader();
 }
 
-void Database::RewriteStruct(void *target_struct, DbSize size, DbPtr start) {  // todo refactor copy paste
+void Database::RewriteStruct(void *target_struct, DbSize size, DbPtr start) const {  // todo refactor copy paste
   assert(start);
   assert(size != 0);
 
@@ -308,26 +314,26 @@ void Database::RewriteStruct(void *target_struct, DbSize size, DbPtr start) {  /
   PageChunk cur_chunk, next_chunk;
   int i = 0;
   for (; i + kChunkDataSize < size; i += kChunkDataSize) {
-    this->file_->read(&next_chunk, sizeof(PageChunk), next_free);
+    this->file_->Read(&next_chunk, sizeof(PageChunk), next_free);
     cur_chunk.nxt_chunk = next_chunk.nxt_chunk;
     std::copy(byted_target_struct + i, byted_target_struct + i + kChunkDataSize, cur_chunk.data);
-    this->file_->write(&cur_chunk, sizeof(PageChunk), next_free);
+    this->file_->Write(&cur_chunk, sizeof(PageChunk), next_free);
     next_free = next_chunk.nxt_chunk;
     assert(next_free > 0);
   }
   // последний чанк должен указывать на голову списка
-  this->file_->read(&next_chunk, sizeof(PageChunk), next_free);
+  this->file_->Read(&next_chunk, sizeof(PageChunk), next_free);
   cur_chunk.nxt_chunk = 0;
   std::fill(cur_chunk.data, cur_chunk.data + sizeof(cur_chunk.data), 0);
   std::copy(byted_target_struct + i, byted_target_struct + std::min(i + kChunkDataSize, size), cur_chunk.data);
-  this->file_->write(&cur_chunk, sizeof(PageChunk), next_free);
+  this->file_->Write(&cur_chunk, sizeof(PageChunk), next_free);
 }
 
 Byte *Database::ReadStruct(DbPtr target_struct) const {
   std::vector<PageChunk> buffer;
   while (target_struct != 0) {
     buffer.emplace_back();
-    this->file_->read(&(buffer.back()), sizeof(PageChunk), target_struct);
+    this->file_->Read(&(buffer.back()), sizeof(PageChunk), target_struct);
     target_struct = buffer.back().nxt_chunk;
   }
   Byte *result = new Byte[buffer.size() * sizeof(PageChunk::data)];
@@ -345,7 +351,6 @@ std::string Database::ReadString(const DbPtr ptr) const {
   debug("Считана строка", result);
   return result;
 }
-
 
 DbPtr Database::SaveString(const std::string &s) {
   debug("Сохраняю строку", s);
@@ -379,33 +384,33 @@ Result Database::GetElements() const {
   //    }
   //    return {false, "", result_payload(elements)};
   debug("TODO");
-  return Result(false, "Not found");
+  return {false, "Not found"};
 }
 
 Result Database::InsertElement(insert_query args) const {
-  info("Запрос на вставку элемента");
+  Info("Запрос на вставку элемента");
 
   debug("Проверка наличия схемы");
   auto target_schema = GetSchemaByName(args.type);
   if (!target_schema.ok_) {
-    return Result(false, "Schema for element not created");
+    return {false, "Schema for element not created"};
   }
   if (std::get<Schema>(target_schema.payload_).fields_.size() != args.fields.size()) {
-    return Result(false, "Element not match with schema by fields count");
+    return {false, "Element not match with schema by fields count"};
   }
   for (auto [k, v] : std::get<Schema>(target_schema.payload_).fields_) {
     if (args.fields.find(k) == args.fields.end() || args.fields[k].index() != v) {
-      return Result(false, "Element not match with schema");
+      return {false, "Element not match with schema"};
     }
   }
 
   //  SaveElement();
 
-  return Result(true, "Done");  // TODO id
+  return {true, "Done"};  // TODO id
 }
 
 Result Database::GetSchemas() const {
-  info("Запрос на получение всех схем");
+  Info("Запрос на получение всех схем");
   std::vector<Schema> schemas;
   ListIterator<kSchemasPageMarker, Schema> it{self_ref_, master_header_.schemas};
   for (int i = 0; i < master_header_.schemas.count; i++) {
@@ -427,7 +432,7 @@ DbPtr Database::SaveSchema(const SchemaHeader &sh) {
 }
 
 Result Database::DeleteSchema(const delete_schema_query &name) {
-  info("Запрос на удаление схемы");
+  Info("Запрос на удаление схемы");
   debug(name);
   auto it = ListIterator<kSchemasPageMarker, Schema>(this, master_header_.schemas);
   for (int i = 0; i < master_header_.schemas.count; i++) {
@@ -443,11 +448,11 @@ Result Database::DeleteSchema(const delete_schema_query &name) {
 }
 
 Result Database::CreateSchema(const create_schema_query &args) {
-  info("Запрос на создание новой схемы:");
+  Info("Запрос на создание новой схемы:");
   debug(args.name_);
   if (GetSchemaByName(args.name_).ok_) {
     debug("Схема не создана, потому что уже существует схема с тем же именем");
-    return Result(false, "Duplicated schema name");
+    return {false, "Duplicated schema name"};
   }
   SchemaHeader sh{SaveString(args.name_), static_cast<DbSize>(args.fields_.size()),
                   master_header_.schemas.first_element};
@@ -457,58 +462,8 @@ Result Database::CreateSchema(const create_schema_query &args) {
   }
   SaveSchema(sh);
 
-  return Result(true, "");
+  return {true, ""};
 }
-
-// DbPtr Database::SaveElement(const ElementHeader &sh) {
-//   debug("Записываю схему");
-//   DbPtr result = 0;
-//
-//   auto current_page_address = master_header_.schemas_last_page;
-//   page_header current_page = page_header();
-//   this->file_->read(&current_page, sizeof(page_header), current_page_address);
-//
-//   // Если не хватает места -- выделяем новые страницы
-//   if (current_page.GetFreeSpace() < sh.GetOnFileSize()) {
-//     AllocPagesForSize(current_page, sh.GetOnFileSize());
-//   }
-//
-//   // начало записи
-//   if (current_page.GetFreeSpace() < sizeof(raw_schema_header)) {
-//     assert(current_page.GetFreeSpace() == 0);
-//     current_page_address = current_page.nxt_page;
-//     this->file_->read(&current_page, sizeof(page_header), current_page_address);
-//   }
-//
-//   debug("Сохраняем заголовок");
-//   raw_schema_header to_save{.name = sh.name_, .size = sh.size_};
-//
-//   result = current_page_address + sizeof(page_header) + current_page.ind_last_elem;
-//   this->file_->write(&to_save, sizeof(raw_schema_header), result);
-//   current_page.ind_last_elem += sizeof(raw_schema_header);
-//   this->file_->write(&current_page, sizeof(page_header), current_page_address);
-//
-//   debug("Сохраняем элементы");
-//   auto saving_size = sh.GetFlexibleElementSize();
-//   while (saving_size > 0) {
-//     if (current_page.GetFreeSpace() == 0) {
-//       debug("На странице закончилось место. Переход на следующую");
-//       current_page_address = current_page.nxt_page;
-//       this->file_->read(&current_page, sizeof(page_header), current_page_address);
-//     }
-//     auto writable_size = std::min(current_page.GetFreeSpace(), saving_size);
-//     this->file_->write(sh.fields_, writable_size,
-//                        current_page_address + sizeof(page_header) + current_page.ind_last_elem);
-//     current_page.ind_last_elem += writable_size;
-//     saving_size -= writable_size;
-//     this->file_->write(&current_page, sizeof(page_header), current_page_address);
-//   }
-//
-//   master_header_.schemas_count++;
-//   file_->write(&master_header_, sizeof(master_header_), 0);
-//   debug("Схема записана");
-//   return result;
-// }
 
 void Database::RemoveString(DbPtr ptr) {
   debug("Удаляю строку начиная с", ptr);
@@ -522,17 +477,14 @@ Result Database::GetSchemaByName(const std::string &name) const {
     auto cur = it.Read();
     if (cur.name_ == name) {
       debug("Схема найдена");
-      return Result(true, "", result_payload(cur));
+      return {true, "", result_payload(cur)};
     }
     it.Next();
   }
   debug("Схема не найдена");
-  return Result(false, "Not found");
+  return {false, "Not found"};
 }
 
-void Database::UpdateMasterHeader() {
-  this->file_->write(&master_header_, sizeof(master_header_), 0);
-}
-
+void Database::UpdateMasterHeader() { this->file_->Write(&master_header_, sizeof(master_header_), 0); }
 
 #endif  // LLP_INCLUDE_DATABASE_H_
