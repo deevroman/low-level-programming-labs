@@ -3,31 +3,47 @@
 
 #include "logger.h"
 #include "raw_element_header.h"
-#include "raw_schema_header.h"
 #include "types.h"
-//
-//class ElementHeader {
-// public:
-//  DbSize id_{};
-//  DbSize size_{};
-//  DbPtr brother_link{};
-//  element_value *fields_{};
-//  ElementHeader(DbSize id, DbSize size) : id_(id), size_(size) {
-//    debug("Создаю SchemaHeader", id, size);
-//    fields_ = reinterpret_cast<element_value *>(new char[GetFlexibleElementSize()]{});
-//  }
-//  virtual ~ElementHeader() { delete[] fields_; }
-//  [[nodiscard]] DbSize GetOnFileSize() const { return sizeof(raw_schema_header) + GetFlexibleElementSize(); }
-//  [[nodiscard]] DbSize GetFlexibleElementSize() const {
-//    // округялем вверх до размера заголовка, чтобы при наличии пустоты на странице в
-//    // неё всегда мог поместиться заголовок таким образом все схемы будут
-//    // лежать в памяти плотно
-//    return (size_ * sizeof(element_value) + sizeof(raw_schema_header) - 1) / sizeof(raw_schema_header) *
-//           sizeof(raw_schema_header);
-//  }
-//  [[nodiscard]] DbSize GetFlexiblePadding() const {
-//    return size_ * sizeof(element_value) % sizeof(raw_schema_header);
-//  }
-//};
+
+class ElementHeader {
+ public:
+  DbSize id_{};
+  DbSize size_{};
+  DbPtr parent_link_{};
+  DbPtr child_link_{};
+  DbPtr brother_link_{};
+  element_value *fields_{};
+
+  ElementHeader(DbSize id, DbSize size, DbPtr parent_link, DbPtr child_link)
+      : id_(id), size_(size), parent_link_(parent_link), child_link_(child_link) {
+    debug("Создаю SchemaHeader", id, size);
+    fields_ = reinterpret_cast<element_value *>(new char[GetFlexibleElementSize()]{});
+  }
+
+  virtual ~ElementHeader() { delete[] fields_; }
+
+  [[nodiscard]] DbSize GetOnFileSize() const { return sizeof(raw_element_header) + GetFlexibleElementSize(); }
+
+  [[nodiscard]] DbSize GetFlexibleElementSize() const { return size_ * sizeof(element_value); }
+
+  [[nodiscard]] Byte *MakePackedElement() const {
+    Byte *buffer = new Byte[GetOnFileSize()];
+    *reinterpret_cast<raw_element_header *>(buffer) =
+        raw_element_header(id_, size_, parent_link_, child_link_, brother_link_);
+    std::copy(fields_, fields_ + size_, (element_value *)((buffer + sizeof(raw_element_header))));
+    return buffer;
+  }
+
+  explicit ElementHeader(Byte *buffer) {
+    id_ = reinterpret_cast<raw_element_header *>(buffer)->id;
+    size_ = reinterpret_cast<raw_element_header *>(buffer)->size;
+    parent_link_ = reinterpret_cast<raw_element_header *>(buffer)->parent_link;
+    child_link_ = reinterpret_cast<raw_element_header *>(buffer)->child_link;
+    brother_link_ = reinterpret_cast<raw_element_header *>(buffer)->brother_link;
+    fields_ = reinterpret_cast<element_value *>(new char[GetFlexibleElementSize()]{});
+    auto from = (element_value *)((buffer + sizeof(raw_element_header)));
+    std::copy(from, from + size_, fields_);
+  };
+};
 
 #endif  // LLP_INCLUDE_ELEMENTHEADER_H_

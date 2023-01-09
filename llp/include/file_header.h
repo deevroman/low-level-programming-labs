@@ -12,13 +12,13 @@ struct file_header {
   int64_t signature{};
   // позиция конца файла
   DbPtr file_end{};
-  // количество данных в страницы без учёта заголовков
-  DbSize data_summary_size{};
   // позиции первых страниц заданного типа
   FileChunkedList<kSchemasPageMarker> schemas;
   FileChunkedList<kNodesPageMarker> nodes;
   FileChunkedList<kStringsPageMarker> strings;
+  DbPtr not_inserted_nodes{};
   DbSize id_counter{1};
+  DbPtr pad{};
 
   file_header() = default;
 

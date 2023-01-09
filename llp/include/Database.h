@@ -8,10 +8,12 @@
 #include <typeinfo>
 #include <vector>
 
+#include "Element.h"
 #include "ElementHeader.h"
 #include "FileInterface.h"
 #include "PageChunk.h"
 #include "Query.h"
+#include "Schema.h"
 #include "SchemaHeader.h"
 #include "file_header.h"
 #include "logger.h"
@@ -68,17 +70,23 @@ class Database {
 
   [[nodiscard]] Result GetSchemaByName(const std::string &name) const;
 
-  [[nodiscard]] Result InsertElement(insert_query args) const;
+  [[nodiscard]] Result InsertElement(insert_query args);
+
+  void FixNotInserted();
 
   [[nodiscard]] Result GetElements() const;
+
+  DbPtr SaveElement(ElementHeader el);
 
   template <uint64_t PageMarker, class Element>
   class ListIterator {
     mutable Database *db_;
     FileChunkedList<PageMarker> head_;
     DbPtr prev_ptr_{};
-    DbPtr current_ptr_{};
     int cur_index_ = 0;
+
+   public:
+    DbPtr current_ptr_{};
 
    public:
     ListIterator(Database *db, FileChunkedList<PageMarker> head);
@@ -97,7 +105,6 @@ void Database::ListIterator<PageMarker, Element>::Remove() {
   std::unique_ptr<Byte[]> buffer(this->db_->ReadStruct(current_ptr_));
   auto unpacked_schema = SchemaHeader(buffer.get());
   debug_assert(unpacked_schema.Validate(*this->db_->file_));
-  
 
   debug("Удаляю ссылки на строки в схеме");
   db_->RemoveString(unpacked_schema.name_);
@@ -129,7 +136,7 @@ void Database::ListIterator<PageMarker, Element>::Remove() {
 template <uint64_t PageMarker, class Element>
 Element Database::ListIterator<PageMarker, Element>::Read() {
   std::unique_ptr<Byte[]> buffer(this->db_->ReadStruct(current_ptr_));
-  if (PageMarker == kSchemasPageMarker) {
+  if constexpr (PageMarker == kSchemasPageMarker) {
     auto unpacked_schema = SchemaHeader(buffer.get());
     debug_assert(unpacked_schema.Validate(*this->db_->file_));
     auto result = Element();
@@ -137,10 +144,16 @@ Element Database::ListIterator<PageMarker, Element>::Read() {
     for (int i = 0; i < unpacked_schema.size_; i++) {
       result.fields_[db_->ReadString(unpacked_schema.fields_[i].key)] = unpacked_schema.fields_[i].value_type;
     }
-    this->cur_index_++;
     return result;
   } else if (PageMarker == kNodesPageMarker) {
-    // TODO
+    //    auto unpacked_element = ElementHeader(buffer.get());
+    ////    debug_assert(unpacked_element.Validate(*this->db_->file_));
+    auto result = Element();
+    //    result.name_ = db_->ReadString(unpacked_element.name_);
+    //    for (int i = 0; i < unpacked_element.size_; i++) {
+    //      result.fields_[i] = unpacked_element.fields_[i];
+    //    }
+    return result;
   }
 }
 
@@ -151,7 +164,18 @@ void Database::ListIterator<PageMarker, Element>::Next() {
     prev_ptr_ = current_ptr_;
     current_ptr_ = SchemaHeader(buffer.get()).nxt_;
   } else if (PageMarker == kNodesPageMarker) {
-    // TODO
+    auto eh = ElementHeader(buffer.get());
+    prev_ptr_ = current_ptr_;
+    if (eh.child_link_ != 0 && eh.child_link_ != prev_ptr_) {
+      current_ptr_ = eh.child_link_;
+      this->cur_index_++;
+    } else if (eh.brother_link_ != 0) {
+      current_ptr_ = eh.brother_link_;
+      this->cur_index_++;
+    } else {
+      current_ptr_ = eh.parent_link_;
+      Next();
+    }
   }
 }
 
@@ -189,7 +213,6 @@ bool Database::Load() {
 void Database::Init() {
   master_header_.signature = kDatabaseFileSignature;
   master_header_.file_end = sizeof(file_header);
-  master_header_.data_summary_size = 0;
 
   // заголовок
   UpdateMasterHeader();
@@ -271,7 +294,11 @@ DbPtr Database::WriteStruct(void *target_struct, DbSize size, FileChunkedList<Pa
   debug("Занимаю последний чанк структуры", next_free, next_chunk.nxt_chunk);
   this->file_->Write(&cur_chunk, sizeof(PageChunk), next_free);
 
-  elements_list.first_element = result_position;
+  if (PageMarker == kSchemasPageMarker) {
+    elements_list.first_element = result_position;
+  } else if (PageMarker == kNodesPageMarker) {
+    this->master_header_.not_inserted_nodes = result_position;
+  }
   elements_list.first_free_element = next_chunk.nxt_chunk;
   debug(elements_list.first_element, elements_list.first_free_element);
   if (elements_list.first_free_element == 0) {
@@ -377,17 +404,15 @@ Database::Database(const std::string &file_path, bool overwrite) {
 }
 
 Result Database::GetElements() const {
-  //    std::vector<Element> schemas;
-  //    auto it = SchemasPageIterator(self_ref_);
-  //    for (int i = 0; i < master_header_.schemas_count; i++) {
-  //      schemas.push_back(it.ReadSchema());
-  //    }
-  //    return {false, "", result_payload(elements)};
-  debug("TODO");
-  return {false, "Not found"};
+  std::vector<Element> elements;
+  auto it = ListIterator<kNodesPageMarker, Element>(self_ref_, master_header_.nodes);
+  for (int i = 0; i < master_header_.nodes.count; i++) {
+    elements.push_back(it.Read());
+  }
+  return {false, "", result_payload(elements)};
 }
 
-Result Database::InsertElement(insert_query args) const {
+Result Database::InsertElement(insert_query args) {
   Info("Запрос на вставку элемента");
 
   debug("Проверка наличия схемы");
@@ -395,17 +420,21 @@ Result Database::InsertElement(insert_query args) const {
   if (!target_schema.ok_) {
     return {false, "Schema for element not created"};
   }
-  if (std::get<Schema>(target_schema.payload_).fields_.size() != args.fields.size()) {
+  auto schema = std::get<Schema>(target_schema.payload_);
+  if (schema.fields_.size() != args.fields.size()) {
     return {false, "Element not match with schema by fields count"};
   }
-  for (auto [k, v] : std::get<Schema>(target_schema.payload_).fields_) {
+  for (auto [k, v] : schema.fields_) {
     if (args.fields.find(k) == args.fields.end() || args.fields[k].index() != v) {
       return {false, "Element not match with schema"};
     }
   }
 
-  //  SaveElement();
+  master_header_.not_inserted_nodes = SaveElement(
+      ElementHeader(master_header_.id_counter, args.fields.size(), args.parent_id, master_header_.not_inserted_nodes));
 
+  master_header_.id_counter++;
+  UpdateMasterHeader();
   return {true, "Done"};  // TODO id
 }
 
@@ -486,5 +515,44 @@ Result Database::GetSchemaByName(const std::string &name) const {
 }
 
 void Database::UpdateMasterHeader() { this->file_->Write(&master_header_, sizeof(master_header_), 0); }
+
+DbPtr Database::SaveElement(ElementHeader el) {
+  debug("Записываю элемент");
+  auto raw = std::unique_ptr<Byte[]>(el.MakePackedElement());
+  DbPtr result = WriteStruct(raw.get(), el.GetOnFileSize(), master_header_.nodes);
+
+  master_header_.nodes.count++;
+  UpdateMasterHeader();
+  debug("Элемент записан");
+  return result;
+}
+
+void Database::FixNotInserted() {
+  auto cur_target = master_header_.not_inserted_nodes;
+  while (cur_target != 0) {
+    std::unique_ptr<Byte[]> buffer(ReadStruct(cur_target));
+    auto cur = ElementHeader(buffer.get());
+    auto it = ListIterator<kNodesPageMarker, Element>(self_ref_, this->master_header_.nodes);
+    for (int i = 0; i < master_header_.nodes.count; i++) {
+      auto now = it.Read();
+      if (now.id_ == cur.parent_link_) {
+        auto new_brother = cur.child_link_;
+
+        cur.child_link_ = cur_target;
+        RewriteStruct(cur.MakePackedElement(), sizeof(cur.GetOnFileSize()), it.current_ptr_);
+
+        std::unique_ptr<Byte[]> buffer2(ReadStruct(cur_target));
+        auto ch = ElementHeader(buffer2.get());
+        ch.parent_link_ = it.current_ptr_;
+        ch.brother_link_ = new_brother;
+        RewriteStruct(ch.MakePackedElement(), sizeof(ch.GetOnFileSize()), cur_target);
+
+        break;
+      }
+      it.Next();
+    }
+    cur_target = cur.child_link_;
+  }
+}
 
 #endif  // LLP_INCLUDE_DATABASE_H_

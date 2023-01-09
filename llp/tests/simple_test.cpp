@@ -4,7 +4,7 @@
 
 TEST(HelloTest, BasicAssertions) {
   Database db = Database("../tmp/file.hex", true);
-  
+
   EXPECT_NE(db.file_, nullptr);
   db.CreateSchema({"BOM-BOM-BOM-BOM",
                    {
@@ -52,15 +52,15 @@ TEST(HelloTest, BasicAssertions) {
   EXPECT_EQ(lal[0].fields_["AHAHA-AHA-AHAHA"], DB_DOUBLE);
   EXPECT_EQ(lal[0].fields_["OLOLOLO-OLOLOLO"], DB_STRING);
 
-//  db.InsertElement({0,
-//                    "SUKO-SUKOO-SUKO",
-//                    {
-//                        {"12345-678-90123", 3.14},
-//                        {"7654321-1234567", "URA, INSERT"},
-//                    }});
-//
-//  for (auto now : lal) {
-//    now.Print();
-//    std::cout << std::endl;
-//  }
+  db.InsertElement({0,
+                    "SUKO-SUKOO-SUKO",
+                    {
+                        {"12345-678-90123", 3.14},
+                        {"7654321-1234567", "URA, INSERT"},
+                    }});
+  //
+  //  for (auto now : lal) {
+  //    now.Print();
+  //    std::cout << std::endl;
+  //  }
 }

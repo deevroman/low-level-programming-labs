@@ -11,7 +11,7 @@ const uint64_t kStringsPageMarker = 0xCCCCCCCCCCCCCCCC;
 #pragma pack(push, 1)
 struct page_header {
   uint64_t magic_marker{};
-  DbPtr nxt_page{0}; // TODO
+//  DbPtr nxt_page{0}; // TODO
   DbSize size = kDefaultPageSize;
   
   page_header() = default;

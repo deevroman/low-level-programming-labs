@@ -8,6 +8,7 @@
 #include <variant>
 
 #include "Schema.h"
+#include "Element.h"
 
 typedef std::variant<int32_t, double, std::string, bool> data_item;
 
@@ -34,7 +35,7 @@ class Query {
   Query(QueryType type, const query_payload &payload) : type(type), payload(payload) {}
 };
 
-typedef std::variant<std::vector<Schema>, Schema> result_payload;
+typedef std::variant<std::vector<Schema>, Schema, std::vector<Element>, Element> result_payload;
 
 class Result {
  public:

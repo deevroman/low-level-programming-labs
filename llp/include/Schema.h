@@ -5,6 +5,7 @@
 #include <string>
 
 #include "Query.h"
+#include "types.h"
 
 class Schema {
  public:
