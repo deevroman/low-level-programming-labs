@@ -1,11 +1,13 @@
-#ifndef LLP_INCLUDE_SCHEMA_HEADER_CHUNK_H_
-#define LLP_INCLUDE_SCHEMA_HEADER_CHUNK_H_
+#ifndef LLP_INCLUDE_RAW_SCHEMA_HEADER_H_
+#define LLP_INCLUDE_RAW_SCHEMA_HEADER_H_
 #include "types.h"
 
 #pragma pack(push, 1)
 struct raw_schema_header {
   PAD(DbPtr, name);
   PAD(DbSize, size);
+  PAD(DbSize, nxt);
+  raw_schema_header(DbPtr name, DbSize size, DbPtr nxt) : name(name), size(size), nxt(nxt) {}
 } PACKED;
 #pragma pack(pop)
 
@@ -16,4 +18,4 @@ struct schema_key_value {
 } PACKED;
 #pragma pack(pop)
 
-#endif  // LLP_INCLUDE_SCHEMA_HEADER_CHUNK_H_
+#endif  // LLP_INCLUDE_RAW_SCHEMA_HEADER_H_

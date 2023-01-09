@@ -64,6 +64,9 @@ class FileInterface : public AbstractStorage {
              const char *file = __builtin_FILE(), int line = __builtin_LINE()) override {
     std::string from = std::string(file) + ":" + std::to_string(line);
     debug("write", position, size, from, caller);
+    if (position == 0 && std::string(caller) != "UpdateMasterHeader"){
+      error("0 position not from UpdateMasterHeader");
+    }
 #else
   void write(void *ptr, size_t size, const DbPtr position = -1) override {
 #endif

@@ -8,29 +8,37 @@ const uint64_t kSchemasPageMarker = 0xAAAAAAAAAAAAAAAA;
 const uint64_t kNodesPageMarker = 0xBBBBBBBBBBBBBBBB;
 const uint64_t kStringsPageMarker = 0xCCCCCCCCCCCCCCCC;
 
+#pragma pack(push, 1)
 struct page_header {
   page_header() = default;
 
   uint64_t magic_marker{};
-  DbPtr nxt_page{0};
+  DbPtr nxt_page{0}; // TODO
   DbSize size = kDefaultPageSize;
-  DbSize ind_last_elem{0};
+//  DbSize ind_last_elem{0};
 
   explicit page_header(uint64_t magic_marker) : magic_marker(magic_marker) {}
 
-  [[nodiscard]] DbSize GetFreeSpace() const {
-#ifdef DEBUG
-    assert(size >= ind_last_elem);
-#endif
-    return size - ind_last_elem;
-  }
+  //  [[nodiscard]] DbSize GetFreeSpace() const {
+  // #ifdef DEBUG
+  //    assert(size >= ind_last_elem);
+  // #endif
+  //    return size - ind_last_elem;
+  //  }
 
 } PACKED;
+#pragma pack(pop)
 
-static page_header MakeSchemasPageHeader() { return page_header(kSchemasPageMarker); }
+#pragma pack(push, 1)
+template <uint64_t PageMarker>
+struct FileChunkedList {
+  DbPtr first_element{};
+  DbPtr first_free_element{};
+  DbSize count{};
 
-static page_header MakeNodesPageHeader() { return page_header(kNodesPageMarker); }
+  page_header MakePageHeader() { return page_header(PageMarker); }
+} PACKED;
 
-static page_header MakeStringsPageHeader() { return page_header(kStringsPageMarker); }
+#pragma pack(pop)
 
 #endif  // LLP_INCLUDE_PAGE_H_

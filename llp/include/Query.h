@@ -11,12 +11,6 @@
 
 typedef std::variant<int32_t, double, std::string, bool> data_item;
 
-struct Element {
-  long long id;
-  DbPtr child_link;
-  DbPtr next_brother_link;
-};
-
 struct insert_query {
   DbSize parent_id;
   std::string type;

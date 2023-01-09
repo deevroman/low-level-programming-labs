@@ -4,6 +4,7 @@
 
 TEST(HelloTest, BasicAssertions) {
   Database db = Database("../tmp/file.hex", true);
+  
   EXPECT_NE(db.file_, nullptr);
   db.CreateSchema({"BOM-BOM-BOM-BOM",
                    {
@@ -23,15 +24,15 @@ TEST(HelloTest, BasicAssertions) {
   auto kek = db.GetSchemas();
   EXPECT_TRUE(kek.ok_);
   auto lol = std::get<std::vector<Schema>>(kek.payload_);
-  EXPECT_EQ(lol[0].name_, "BOM-BOM-BOM-BOM");
-  EXPECT_EQ(lol[0].fields_["bool_poolyushko"], DB_BOOL);
-  EXPECT_EQ(lol[0].fields_["pole_poolyushko"], DB_INT_32);
+  EXPECT_EQ(lol[2].name_, "BOM-BOM-BOM-BOM");
+  EXPECT_EQ(lol[2].fields_["bool_poolyushko"], DB_BOOL);
+  EXPECT_EQ(lol[2].fields_["pole_poolyushko"], DB_INT_32);
   EXPECT_EQ(lol[1].name_, "SUKO-SUKOO-SUKO");
   EXPECT_EQ(lol[1].fields_["AHAHA-AHA-AHAHA"], DB_DOUBLE);
   EXPECT_EQ(lol[1].fields_["OLOLOLO-OLOLOLO"], DB_STRING);
-  EXPECT_EQ(lol[2].name_, "WEWE-WEWEE-WEWE");
-  EXPECT_EQ(lol[2].fields_["12345-678-90123"], DB_DOUBLE);
-  EXPECT_EQ(lol[2].fields_["7654321-1234567"], DB_STRING);
+  EXPECT_EQ(lol[0].name_, "WEWE-WEWEE-WEWE");
+  EXPECT_EQ(lol[0].fields_["12345-678-90123"], DB_DOUBLE);
+  EXPECT_EQ(lol[0].fields_["7654321-1234567"], DB_STRING);
 
   auto fail = db.CreateSchema({"WEWE-WEWEE-WEWE",
                                {
@@ -51,15 +52,15 @@ TEST(HelloTest, BasicAssertions) {
   EXPECT_EQ(lal[0].fields_["AHAHA-AHA-AHAHA"], DB_DOUBLE);
   EXPECT_EQ(lal[0].fields_["OLOLOLO-OLOLOLO"], DB_STRING);
 
-  db.InsertElement({0,
-                    "SUKO-SUKOO-SUKO",
-                    {
-                        {"12345-678-90123", 3.14},
-                        {"7654321-1234567", "URA, INSERT"},
-                    }});
-
-  for (auto now : lal) {
-    now.Print();
-    std::cout << std::endl;
-  }
+//  db.InsertElement({0,
+//                    "SUKO-SUKOO-SUKO",
+//                    {
+//                        {"12345-678-90123", 3.14},
+//                        {"7654321-1234567", "URA, INSERT"},
+//                    }});
+//
+//  for (auto now : lal) {
+//    now.Print();
+//    std::cout << std::endl;
+//  }
 }

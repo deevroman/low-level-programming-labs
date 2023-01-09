@@ -9,7 +9,7 @@
 #define PACKED
 #endif
 
-constexpr size_t Kek(size_t x) {
+constexpr size_t CalcPadding(size_t x) {
   if (x >= 8) {
     return 16 - x;
   } else {
@@ -20,7 +20,7 @@ constexpr size_t Kek(size_t x) {
 #ifdef DEBUG
 #define PAD(type, value)                 \
   char name_##value[16] = #value;        \
-  char pad_##value[Kek(sizeof(type))]{}; \
+  char pad_##value[CalcPadding(sizeof(type))]{}; \
   type value
 #else
 #define PAD(args) args
@@ -30,13 +30,9 @@ typedef int8_t Byte;
 typedef int64_t DbPtr;
 typedef int64_t DbSize;
 
-enum PrimeTypes { DB_INT_32 = 0, DB_DOUBLE, DB_STRING, DB_BOOL };
+// порядок связан с ElementData
+enum PrimeTypes { DB_INT_32 = 'I', DB_DOUBLE = 'D', DB_STRING = 'S', DB_BOOL = 'B'};
 
-union ElementData {
-  int32_t i_;
-  double d_;
-  DbPtr str_;
-  bool b_;
-};
+
 
 #endif  // LLP_INCLUDE_TYPES_H_

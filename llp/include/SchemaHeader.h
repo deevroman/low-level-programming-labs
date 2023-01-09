@@ -2,30 +2,42 @@
 #define LLP_INCLUDE_SCHEMAHEADER_H_
 
 #include "logger.h"
-#include "schema_header_chunk.h"
+#include "raw_schema_header.h"
 #include "types.h"
 
 class SchemaHeader {
  public:
   DbPtr name_{};
   DbSize size_{};
+  DbPtr nxt_{};
   schema_key_value *fields_{};
-  SchemaHeader(DbPtr name, DbSize size) : name_(name), size_(size) {
+
+  SchemaHeader(DbPtr name, DbSize size, DbPtr nxt) : name_(name), size_(size), nxt_(nxt) {
     debug("Создаю SchemaHeader", name, size);
     fields_ = reinterpret_cast<schema_key_value *>(new char[GetFlexibleElementSize()]{});
   }
+
   virtual ~SchemaHeader() { delete[] fields_; }
+
   [[nodiscard]] DbSize GetOnFileSize() const { return sizeof(raw_schema_header) + GetFlexibleElementSize(); }
-  [[nodiscard]] DbSize GetFlexibleElementSize() const {
-    // округялем вверх до размера заголовка, чтобы при наличии пустоты на странице в
-    // неё всегда мог поместиться заголовок таким образом все схемы будут
-    // лежать в памяти плотно
-    return (size_ * sizeof(schema_key_value) + sizeof(raw_schema_header) - 1) / sizeof(raw_schema_header) *
-           sizeof(raw_schema_header);
+
+  [[nodiscard]] DbSize GetFlexibleElementSize() const { return size_ * sizeof(schema_key_value); }
+
+  Byte *MakePackedSchema() const {
+    Byte *buffer = new Byte[GetOnFileSize()];
+    *reinterpret_cast<raw_schema_header *>(buffer) = raw_schema_header(name_, size_, nxt_);
+    std::copy(fields_, fields_ + size_, (schema_key_value *)((buffer + sizeof(raw_schema_header))));
+    return buffer;
   }
-  [[nodiscard]] DbSize GetFlexiblePadding() const {
-    return size_ * sizeof(schema_key_value) % sizeof(raw_schema_header);
-  }
+
+  SchemaHeader(Byte *buffer) {
+    name_ = reinterpret_cast<raw_schema_header *>(buffer)->name;
+    size_ = reinterpret_cast<raw_schema_header *>(buffer)->size;
+    nxt_ = reinterpret_cast<raw_schema_header *>(buffer)->nxt;
+    fields_ = reinterpret_cast<schema_key_value *>(new char[GetFlexibleElementSize()]{});
+    auto from = (schema_key_value *)((buffer + sizeof(raw_schema_header)));
+    std::copy(from, from + size_, fields_);
+  };
 };
 
 #endif  // LLP_INCLUDE_SCHEMAHEADER_H_

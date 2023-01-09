@@ -1,6 +1,7 @@
 #ifndef LLP_INCLUDE_FILE_HEADER_H_
 #define LLP_INCLUDE_FILE_HEADER_H_
 
+#include "PageChunk.h"
 #include "types.h"
 
 const int64_t kDatabaseFileSignature = 0x4848484848484848;
@@ -11,31 +12,29 @@ struct file_header {
   int64_t signature{};
   // позиция конца файла
   DbPtr file_end{};
-  // количество данных в страницы. Без учёта заголовков
+  // количество данных в страницы без учёта заголовков
   DbSize data_summary_size{};
   // позиции первых страниц заданного типа
-  DbPtr schemas_first_page{};
-  DbPtr nodes_first_page{};
-  DbPtr strings_first_page{};
-  // позиции последних страниц заданного типа
-  DbPtr schemas_last_page{};
-  DbPtr nodes_last_page{};
-  DbPtr strings_last_page{};
-  DbSize schemas_count{};
-  DbSize counter{};
+  FileChunkedList<kSchemasPageMarker> schemas;
+  FileChunkedList<kNodesPageMarker> nodes;
+  FileChunkedList<kStringsPageMarker> strings;
+  DbSize id_counter{1};
 
-  file_header(int64_t signature, DbPtr file_end, DbSize data_summary_size, DbPtr schemas_first_page,
-              DbPtr nodes_first_page, DbPtr strings_first_page, DbPtr schemas_last_page, DbPtr nodes_last_page,
-              DbPtr strings_last_page)
-      : signature(signature),
-        file_end(file_end),
-        data_summary_size(data_summary_size),
-        schemas_first_page(schemas_first_page),
-        nodes_first_page(nodes_first_page),
-        strings_first_page(strings_first_page),
-        schemas_last_page(schemas_last_page),
-        nodes_last_page(nodes_last_page),
-        strings_last_page(strings_last_page) {}
+  //  DbPtr schemas_first_chunk;
+  //  DbPtr schemas_first_free_chunk;
+  //  DbPtr nodes_first_chunk;
+  //  DbPtr nodes_first_free_chunk;
+  //  DbPtr strings_first_chunk;
+  //  DbPtr strings_first_free_chunk;
+
+  //  DbPtr schemas_first_page{};  // xxx
+  //
+  //  DbPtr nodes_first_page{};
+  //  DbPtr strings_first_page{};
+  // позиции последних страниц заданного типа
+  //  DbPtr schemas_last_page{};
+  //  DbPtr nodes_last_page{};
+  //  DbPtr strings_last_page{};
 
   file_header() = default;
 
