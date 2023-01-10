@@ -34,7 +34,7 @@ class FileInterface {
         fclose(fd_);
       }
     }
-    fd_ = fopen(file_path.c_str(), "r+");
+    fd_ = fopen(file_path.c_str(), "rb+");
     if (fd_ == nullptr) {
       error("Файл с базой не открыт");
     }

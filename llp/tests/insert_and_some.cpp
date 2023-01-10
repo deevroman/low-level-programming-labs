@@ -2,7 +2,7 @@
 
 #include "Database.h"
 
-/*
+
 TEST(InsertAndListTest, BasicAssertions) {
   Database db = Database("../tmp/file.hex", true);
   EXPECT_NE(db.file_, nullptr);
@@ -123,4 +123,4 @@ TEST(IndestAndRemove, BasicAssertions) {
     std::cout << std::endl;
   }
 }
-*/
+
