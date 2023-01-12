@@ -23,7 +23,8 @@ constexpr size_t CalcPadding(size_t x) {
   char pad_##value[CalcPadding(sizeof(type))]{}; \
   type value
 #else
-#define PAD(args) args
+#define PAD(type, value) \
+  type value
 #endif
 
 typedef int8_t Byte;

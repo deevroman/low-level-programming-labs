@@ -52,7 +52,7 @@ class FileInterface {
     calls_.insert({position, size});
     calls_ptrs_.insert(position);
 #else
-  void write(void *ptr, size_t size, const DbPtr position = -1) override {
+  void Write(void *ptr, size_t size, const DbPtr position = -1) {
 #endif
     if (position != -1) {
       fseek(fd_, position, SEEK_SET);
@@ -74,7 +74,7 @@ class FileInterface {
       error("Bad read");
     }
 #else
-  void read(void *buffer, size_t size, DbPtr position = -1) override {
+  void Read(void *buffer, size_t size, DbPtr position = -1) {
 #endif
     if (position != -1) {
       fseek(fd_, position, SEEK_SET);

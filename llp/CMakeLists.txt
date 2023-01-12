@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 3.16)
 project(llp)
 
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_FLAGS "-DDEBUG") # -Wall -pedantic -Wextra
+#set(CMAKE_CXX_FLAGS "-DDEBUG") # -Wall -pedantic -Wextra
 #add_compile_options("-fprofile-arcs" "-ftest-coverage")
-set(CMAKE_BUILD_TYPE Debug)
+#set(CMAKE_BUILD_TYPE Debug)
 
 add_library(llp INTERFACE)
 target_include_directories(llp INTERFACE {CMAKE_CURRENT_SOURCE_DIR})
