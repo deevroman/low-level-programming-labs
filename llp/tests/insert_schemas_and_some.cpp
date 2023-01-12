@@ -2,8 +2,7 @@
 
 #include "Database.h"
 
-
-TEST(InsertAndListTest, BasicAssertions) {
+TEST(InsertSchemasAndListTest, TwoInserts) {
   Database db = Database("../tmp/file.hex", true);
   EXPECT_NE(db.file_, nullptr);
   db.CreateSchema({"BOM-BOM-BOM-BOM",
@@ -18,21 +17,21 @@ TEST(InsertAndListTest, BasicAssertions) {
                    }});
   auto kek = db.GetSchemas();
   EXPECT_TRUE(kek.ok_);
-  auto lol = std::get<std::vector<Schema>>(kek.payload_);
+  auto lol = get<std::vector<Schema>>(kek.payload_);
   EXPECT_EQ(lol[1].name_, "BOM-BOM-BOM-BOM");
   EXPECT_EQ(lol[1].fields_["bool_poolyushko"], DB_BOOL);
   EXPECT_EQ(lol[1].fields_["pole_poolyushko"], DB_INT_32);
   EXPECT_EQ(lol[0].name_, "SUKO-SUKOO-SUKO");
   EXPECT_EQ(lol[0].fields_["AHAHA-AHA-AHAHA"], DB_DOUBLE);
   EXPECT_EQ(lol[0].fields_["OLOLOLO-OLOLOLO"], DB_STRING);
-
+  
   for (auto now : lol) {
     now.Print();
     std::cout << std::endl;
   }
 }
 
-TEST(InsertAndFindTest, BasicAssertions) {
+TEST(InsertSchemasAndListTest, DuplicateInsert) {
   Database db = Database("../tmp/file.hex", true);
   EXPECT_NE(db.file_, nullptr);
   db.CreateSchema({"BOM-BOM-BOM-BOM",
@@ -52,7 +51,7 @@ TEST(InsertAndFindTest, BasicAssertions) {
                    }});
   auto kek = db.GetSchemas();
   EXPECT_TRUE(kek.ok_);
-  auto lol = std::get<std::vector<Schema>>(kek.payload_);
+  auto lol = get<std::vector<Schema>>(kek.payload_);
   EXPECT_EQ(lol[2].name_, "BOM-BOM-BOM-BOM");
   EXPECT_EQ(lol[2].fields_["bool_poolyushko"], DB_BOOL);
   EXPECT_EQ(lol[2].fields_["pole_poolyushko"], DB_INT_32);
@@ -63,13 +62,20 @@ TEST(InsertAndFindTest, BasicAssertions) {
   EXPECT_EQ(lol[0].fields_["12345-678-90123"], DB_DOUBLE);
   EXPECT_EQ(lol[0].fields_["7654321-1234567"], DB_STRING);
 
+  auto fail = db.CreateSchema({"WEWE-WEWEE-WEWE",
+                               {
+                                   {"12345-678-90123", DB_DOUBLE},
+                                   {"7654321-1234567", DB_STRING},
+                               }});
+  EXPECT_FALSE(fail.ok_);
+  
   for (auto now : lol) {
     now.Print();
     std::cout << std::endl;
   }
 }
 
-TEST(IndestAndRemove, BasicAssertions) {
+TEST(IndestSchemasAndRemove, DeleteSchemas) {
   Database db = Database("../tmp/file.hex", true);
   EXPECT_NE(db.file_, nullptr);
   db.CreateSchema({"BOM-BOM-BOM-BOM",
@@ -89,7 +95,7 @@ TEST(IndestAndRemove, BasicAssertions) {
                    }});
   auto kek = db.GetSchemas();
   EXPECT_TRUE(kek.ok_);
-  auto lol = std::get<std::vector<Schema>>(kek.payload_);
+  auto lol = get<std::vector<Schema>>(kek.payload_);
   EXPECT_EQ(lol[2].name_, "BOM-BOM-BOM-BOM");
   EXPECT_EQ(lol[2].fields_["bool_poolyushko"], DB_BOOL);
   EXPECT_EQ(lol[2].fields_["pole_poolyushko"], DB_INT_32);
@@ -112,7 +118,7 @@ TEST(IndestAndRemove, BasicAssertions) {
 
   kek = db.GetSchemas();
   EXPECT_TRUE(kek.ok_);
-  auto lal = std::get<std::vector<Schema>>(kek.payload_);
+  auto lal = get<std::vector<Schema>>(kek.payload_);
   EXPECT_EQ(lal.size(), 1);
   EXPECT_EQ(lal[0].name_, "SUKO-SUKOO-SUKO");
   EXPECT_EQ(lal[0].fields_["AHAHA-AHA-AHAHA"], DB_DOUBLE);
@@ -123,4 +129,3 @@ TEST(IndestAndRemove, BasicAssertions) {
     std::cout << std::endl;
   }
 }
-

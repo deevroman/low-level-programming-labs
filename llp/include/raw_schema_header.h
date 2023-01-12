@@ -14,7 +14,7 @@ struct raw_schema_header {
 #pragma pack(push, 1)
 struct schema_key_value {
   PAD(DbPtr, key);
-  PAD(PrimeTypes, value_type);
+  PAD(DataItem, value_type);
 } PACKED;
 #pragma pack(pop)
 

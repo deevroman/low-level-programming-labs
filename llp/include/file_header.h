@@ -16,8 +16,6 @@ struct file_header {
   FileChunkedList<kSchemasPageMarker> schemas;
   FileChunkedList<kNodesPageMarker> nodes;
   FileChunkedList<kStringsPageMarker> strings;
-  DbPtr not_inserted_nodes{};
-  DbSize id_counter{1};
   DbPtr pad{};
 
   file_header() = default;

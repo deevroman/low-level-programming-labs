@@ -10,12 +10,12 @@
 class Schema {
  public:
   std::string name_;
-  std::map<std::string, PrimeTypes> fields_;
+  std::map<std::string, DataItem> fields_;
 
  public:
   Schema() = default;
 
-  Schema(std::string name, std::map<std::string, PrimeTypes> fields)
+  Schema(std::string name, std::map<std::string, DataItem> fields)
       : name_(std::move(name)), fields_(std::move(fields)) {}
   void Print() {
     std::cout << name_ << "\n";
@@ -27,9 +27,10 @@ class Schema {
 
 class SchemaWithPosition : public Schema {
  public:
-  DbPtr page_start_{};
   DbPtr position_{};
-  DbSize index_{};
+  bool Valid(){
+    return position_;
+  }
 };
 
 #endif  // LLP_INCLUDE_SCHEMA_H_

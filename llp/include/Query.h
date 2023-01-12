@@ -7,10 +7,9 @@
 #include <utility>
 #include <variant>
 
-#include "Schema.h"
 #include "Element.h"
+#include "Schema.h"
 
-typedef std::variant<int32_t, double, std::string, bool> data_item;
 
 struct insert_query {
   DbSize parent_id;
@@ -20,22 +19,12 @@ struct insert_query {
       : parent_id(parent_id), type(std::move(type)), fields(fields) {}
 };
 
-enum QueryType { CREATE_SCHEMA = 0, SHOW_SCHEMAS, DELETE_SCHEMA, INSERT, PRINT, UPDATE, ERASE };
 
 typedef Schema create_schema_query;  // XXX Clion bug?
 typedef std::string delete_schema_query;
+typedef DbPtr delete_query_by_id_query;
 
-typedef std::variant<create_schema_query, delete_schema_query, insert_query> query_payload;
-
-class Query {
- public:
-  QueryType type;
-  query_payload payload;
-
-  Query(QueryType type, const query_payload &payload) : type(type), payload(payload) {}
-};
-
-typedef std::variant<std::vector<Schema>, Schema, std::vector<Element>, Element> result_payload;
+typedef std::variant<std::vector<Schema>, Schema, std::vector<Element>, Element, int64_t> result_payload;
 
 class Result {
  public:
@@ -43,10 +32,10 @@ class Result {
   std::string error_;
   result_payload payload_;
 
-  Result(bool ok, const std::string &error) : ok_(ok), error_(error) {}
+  Result(bool ok, std::string error) : ok_(ok), error_(std::move(error)) {}
 
-  Result(bool ok, const std::string &error, const result_payload &payload)
-      : ok_(ok), error_(error), payload_(payload) {}
+  Result(bool ok, std::string error, result_payload payload)
+      : ok_(ok), error_(std::move(error)), payload_(std::move(payload)) {}
 };
 
 #endif  // LLP_INCLUDE_QUERY_H_

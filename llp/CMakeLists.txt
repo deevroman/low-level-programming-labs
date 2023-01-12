@@ -29,7 +29,8 @@ FetchContent_MakeAvailable(googletest)
 
 # Define a test
 add_executable(simple_test tests/simple_test.cpp)
-add_executable(insert_and_some tests/insert_and_some.cpp)
+add_executable(insert_schemas_and_some tests/insert_schemas_and_some.cpp)
+add_executable(insert_elements_and_some tests/insert_elements_and_some.cpp)
 
 ######################################
 # Configure the test to use GoogleTest
@@ -41,10 +42,15 @@ target_link_libraries(
         GTest::gtest_main
 )
 target_link_libraries(
-        insert_and_some
+        insert_schemas_and_some
+        GTest::gtest_main
+)
+target_link_libraries(
+        insert_elements_and_some
         GTest::gtest_main
 )
 
 include(GoogleTest)
 gtest_discover_tests(simple_test)
-gtest_discover_tests(insert_and_some)
+gtest_discover_tests(insert_schemas_and_some)
+gtest_discover_tests(insert_elements_and_some)

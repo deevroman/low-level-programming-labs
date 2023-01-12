@@ -18,8 +18,8 @@ constexpr size_t CalcPadding(size_t x) {
 }
 
 #ifdef DEBUG
-#define PAD(type, value)                 \
-  char name_##value[16] = #value;        \
+#define PAD(type, value)                         \
+  char name_##value[16] = #value;                \
   char pad_##value[CalcPadding(sizeof(type))]{}; \
   type value
 #else
@@ -31,8 +31,6 @@ typedef int64_t DbPtr;
 typedef int64_t DbSize;
 
 // порядок связан с ElementData
-enum PrimeTypes { DB_INT_32 = 'I', DB_DOUBLE = 'D', DB_STRING = 'S', DB_BOOL = 'B'};
-
-
+enum DataItem { DB_INT_32 = 0, DB_DOUBLE, DB_STRING, DB_BOOL };
 
 #endif  // LLP_INCLUDE_TYPES_H_
