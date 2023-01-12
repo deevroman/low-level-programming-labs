@@ -11,7 +11,7 @@ TEST(InsertElementsAndListTest, OnlyRootElement) {
                        {"pole_poolyushko", DB_INT_32},
                        {"bool_poolyushko", DB_BOOL},
                    }});
-  db.CreateSchema({"SUKO-SUKOO-SUKO",
+  db.CreateSchema({"SCHEMKA-SCHEMKA",
                    {
                        {"AHAHA-AHA-AHAHA", DB_DOUBLE},
                        {"OLOLOLO-OLOLOLO", DB_STRING},
@@ -23,14 +23,14 @@ TEST(InsertElementsAndListTest, OnlyRootElement) {
                    }});
 
   auto kek = db.InsertElement({0,
-                               "SUKO-SUKOO-SUKO",
+                               "SCHEMKA-SCHEMKA",
                                {
                                    {"12345-678-90123", 3.14},
                                    {"7654321-1234567", "URA, INSERT"},
                                }});
   EXPECT_FALSE(kek.ok_);
   kek = db.InsertElement({0,
-                          "SUKO-SUKOO-SUKO",
+                          "SCHEMKA-SCHEMKA",
                           {
                               {"AHAHA-AHA-AHAHA", 3.14},
                               {"OLOLOLO-OLOLOLO", "URA, INSERT"},
@@ -58,7 +58,7 @@ TEST(InsertElementsAndListTest, TwoElements) {
                          {"pole_poolyushko", DB_INT_32},
                          {"bool_poolyushko", DB_BOOL},
                      }});
-    db.CreateSchema({"SUKO-SUKOO-SUKO",
+    db.CreateSchema({"SCHEMKA-SCHEMKA",
                      {
                          {"AHAHA-AHA-AHAHA", DB_DOUBLE},
                          {"OLOLOLO-OLOLOLO", DB_STRING},
@@ -71,14 +71,14 @@ TEST(InsertElementsAndListTest, TwoElements) {
   }
 
   auto kek = db.InsertElement({0,
-                               "SUKO-SUKOO-SUKO",
+                               "SCHEMKA-SCHEMKA",
                                {
                                    {"12345-678-90123", 3.14},
                                    {"7654321-1234567", "URA, INSERT"},
                                }});
   EXPECT_FALSE(kek.ok_);
   kek = db.InsertElement({0,
-                          "SUKO-SUKOO-SUKO",
+                          "SCHEMKA-SCHEMKA",
                           {
                               {"AHAHA-AHA-AHAHA", 3.14},
                               {"OLOLOLO-OLOLOLO", "URA, INSERT"},
@@ -86,7 +86,7 @@ TEST(InsertElementsAndListTest, TwoElements) {
   EXPECT_TRUE(kek.ok_);
   auto root_id = get<int64_t>(kek.payload_);
   kek = db.InsertElement({0,
-                          "SUKO-SUKOO-SUKO",
+                          "SCHEMKA-SCHEMKA",
                           {
                               {"AHAHA-AHA-AHAHA", 3.14},
                               {"OLOLOLO-OLOLOLO", "URA, INSERT"},
@@ -94,7 +94,7 @@ TEST(InsertElementsAndListTest, TwoElements) {
   EXPECT_FALSE(kek.ok_);
 
   kek = db.InsertElement({root_id,
-                          "SUKO-SUKOO-SUKO",
+                          "SCHEMKA-SCHEMKA",
                           {
                               {"AHAHA-AHA-AHAHA", 3.14},
                               {"OLOLOLO-OLOLOLO", "URA, INSERT2"},
@@ -124,7 +124,7 @@ TEST(InsertElementsAndListTest, DeleteElement) {
                          {"pole_poolyushko", DB_INT_32},
                          {"bool_poolyushko", DB_BOOL},
                      }});
-    db.CreateSchema({"SUKO-SUKOO-SUKO",
+    db.CreateSchema({"SCHEMKA-SCHEMKA",
                      {
                          {"AHAHA-AHA-AHAHA", DB_DOUBLE},
                          {"OLOLOLO-OLOLOLO", DB_STRING},
@@ -137,14 +137,14 @@ TEST(InsertElementsAndListTest, DeleteElement) {
   }
   
   auto kek = db.InsertElement({0,
-                               "SUKO-SUKOO-SUKO",
+                               "SCHEMKA-SCHEMKA",
                                {
                                    {"12345-678-90123", 3.14},
                                    {"7654321-1234567", "URA, INSERT"},
                                }});
   EXPECT_FALSE(kek.ok_);
   kek = db.InsertElement({0,
-                          "SUKO-SUKOO-SUKO",
+                          "SCHEMKA-SCHEMKA",
                           {
                               {"AHAHA-AHA-AHAHA", 3.14},
                               {"OLOLOLO-OLOLOLO", "URA, INSERT"},
@@ -152,7 +152,7 @@ TEST(InsertElementsAndListTest, DeleteElement) {
   EXPECT_TRUE(kek.ok_);
   auto root_id = get<int64_t>(kek.payload_);
   kek = db.InsertElement({0,
-                          "SUKO-SUKOO-SUKO",
+                          "SCHEMKA-SCHEMKA",
                           {
                               {"AHAHA-AHA-AHAHA", 3.14},
                               {"OLOLOLO-OLOLOLO", "URA, INSERT"},
@@ -160,7 +160,7 @@ TEST(InsertElementsAndListTest, DeleteElement) {
   EXPECT_FALSE(kek.ok_);
   
   kek = db.InsertElement({root_id,
-                          "SUKO-SUKOO-SUKO",
+                          "SCHEMKA-SCHEMKA",
                           {
                               {"AHAHA-AHA-AHAHA", 3.14},
                               {"OLOLOLO-OLOLOLO", "URA, INSERT2"},

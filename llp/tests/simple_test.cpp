@@ -11,7 +11,7 @@ TEST(HelloTest, BasicAssertions) {
                          {"pole_poolyushko", DB_INT_32},
                          {"bool_poolyushko", DB_BOOL},
                      }});
-    db.CreateSchema({"SUKO-SUKOO-SUKO",
+    db.CreateSchema({"SCHEMKA-SCHEMKA",
                      {
                          {"AHAHA-AHA-AHAHA", DB_DOUBLE},
                          {"OLOLOLO-OLOLOLO", DB_STRING},
@@ -24,14 +24,14 @@ TEST(HelloTest, BasicAssertions) {
   }
   
   auto kek = db.InsertElement({0,
-                               "SUKO-SUKOO-SUKO",
+                               "SCHEMKA-SCHEMKA",
                                {
                                    {"12345-678-90123", 3.14},
                                    {"7654321-1234567", "URA, INSERT"},
                                }});
   EXPECT_FALSE(kek.ok_);
   kek = db.InsertElement({0,
-                          "SUKO-SUKOO-SUKO",
+                          "SCHEMKA-SCHEMKA",
                           {
                               {"AHAHA-AHA-AHAHA", 3.14},
                               {"OLOLOLO-OLOLOLO", "URA, INSERT"},
@@ -39,7 +39,7 @@ TEST(HelloTest, BasicAssertions) {
   EXPECT_TRUE(kek.ok_);
   auto root_id = get<int64_t>(kek.payload_);
   kek = db.InsertElement({0,
-                          "SUKO-SUKOO-SUKO",
+                          "SCHEMKA-SCHEMKA",
                           {
                               {"AHAHA-AHA-AHAHA", 3.14},
                               {"OLOLOLO-OLOLOLO", "URA, INSERT"},
@@ -47,7 +47,7 @@ TEST(HelloTest, BasicAssertions) {
   EXPECT_FALSE(kek.ok_);
   
   kek = db.InsertElement({root_id,
-                          "SUKO-SUKOO-SUKO",
+                          "SCHEMKA-SCHEMKA",
                           {
                               {"AHAHA-AHA-AHAHA", 3.14},
                               {"OLOLOLO-OLOLOLO", "URA, INSERT2"},

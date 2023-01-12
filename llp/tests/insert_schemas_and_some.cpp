@@ -10,7 +10,7 @@ TEST(InsertSchemasAndListTest, TwoInserts) {
                        {"pole_poolyushko", DB_INT_32},
                        {"bool_poolyushko", DB_BOOL},
                    }});
-  db.CreateSchema({"SUKO-SUKOO-SUKO",
+  db.CreateSchema({"SCHEMKA-SCHEMKA",
                    {
                        {"AHAHA-AHA-AHAHA", DB_DOUBLE},
                        {"OLOLOLO-OLOLOLO", DB_STRING},
@@ -21,7 +21,7 @@ TEST(InsertSchemasAndListTest, TwoInserts) {
   EXPECT_EQ(lol[1].name_, "BOM-BOM-BOM-BOM");
   EXPECT_EQ(lol[1].fields_["bool_poolyushko"], DB_BOOL);
   EXPECT_EQ(lol[1].fields_["pole_poolyushko"], DB_INT_32);
-  EXPECT_EQ(lol[0].name_, "SUKO-SUKOO-SUKO");
+  EXPECT_EQ(lol[0].name_, "SCHEMKA-SCHEMKA");
   EXPECT_EQ(lol[0].fields_["AHAHA-AHA-AHAHA"], DB_DOUBLE);
   EXPECT_EQ(lol[0].fields_["OLOLOLO-OLOLOLO"], DB_STRING);
   
@@ -39,7 +39,7 @@ TEST(InsertSchemasAndListTest, DuplicateInsert) {
                        {"pole_poolyushko", DB_INT_32},
                        {"bool_poolyushko", DB_BOOL},
                    }});
-  db.CreateSchema({"SUKO-SUKOO-SUKO",
+  db.CreateSchema({"SCHEMKA-SCHEMKA",
                    {
                        {"AHAHA-AHA-AHAHA", DB_DOUBLE},
                        {"OLOLOLO-OLOLOLO", DB_STRING},
@@ -55,7 +55,7 @@ TEST(InsertSchemasAndListTest, DuplicateInsert) {
   EXPECT_EQ(lol[2].name_, "BOM-BOM-BOM-BOM");
   EXPECT_EQ(lol[2].fields_["bool_poolyushko"], DB_BOOL);
   EXPECT_EQ(lol[2].fields_["pole_poolyushko"], DB_INT_32);
-  EXPECT_EQ(lol[1].name_, "SUKO-SUKOO-SUKO");
+  EXPECT_EQ(lol[1].name_, "SCHEMKA-SCHEMKA");
   EXPECT_EQ(lol[1].fields_["AHAHA-AHA-AHAHA"], DB_DOUBLE);
   EXPECT_EQ(lol[1].fields_["OLOLOLO-OLOLOLO"], DB_STRING);
   EXPECT_EQ(lol[0].name_, "WEWE-WEWEE-WEWE");
@@ -83,7 +83,7 @@ TEST(IndestSchemasAndRemove, DeleteSchemas) {
                        {"pole_poolyushko", DB_INT_32},
                        {"bool_poolyushko", DB_BOOL},
                    }});
-  db.CreateSchema({"SUKO-SUKOO-SUKO",
+  db.CreateSchema({"SCHEMKA-SCHEMKA",
                    {
                        {"AHAHA-AHA-AHAHA", DB_DOUBLE},
                        {"OLOLOLO-OLOLOLO", DB_STRING},
@@ -99,7 +99,7 @@ TEST(IndestSchemasAndRemove, DeleteSchemas) {
   EXPECT_EQ(lol[2].name_, "BOM-BOM-BOM-BOM");
   EXPECT_EQ(lol[2].fields_["bool_poolyushko"], DB_BOOL);
   EXPECT_EQ(lol[2].fields_["pole_poolyushko"], DB_INT_32);
-  EXPECT_EQ(lol[1].name_, "SUKO-SUKOO-SUKO");
+  EXPECT_EQ(lol[1].name_, "SCHEMKA-SCHEMKA");
   EXPECT_EQ(lol[1].fields_["AHAHA-AHA-AHAHA"], DB_DOUBLE);
   EXPECT_EQ(lol[1].fields_["OLOLOLO-OLOLOLO"], DB_STRING);
   EXPECT_EQ(lol[0].name_, "WEWE-WEWEE-WEWE");
@@ -120,7 +120,7 @@ TEST(IndestSchemasAndRemove, DeleteSchemas) {
   EXPECT_TRUE(kek.ok_);
   auto lal = get<std::vector<Schema>>(kek.payload_);
   EXPECT_EQ(lal.size(), 1);
-  EXPECT_EQ(lal[0].name_, "SUKO-SUKOO-SUKO");
+  EXPECT_EQ(lal[0].name_, "SCHEMKA-SCHEMKA");
   EXPECT_EQ(lal[0].fields_["AHAHA-AHA-AHAHA"], DB_DOUBLE);
   EXPECT_EQ(lal[0].fields_["OLOLOLO-OLOLOLO"], DB_STRING);
 

@@ -3,6 +3,7 @@
 
 #include <map>
 #include <string>
+#include <variant>
 
 #include "raw_element_header.h"
 #include "types.h"

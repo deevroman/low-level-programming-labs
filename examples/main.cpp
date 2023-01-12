@@ -6,7 +6,6 @@
 #include "Database.h"
 
 int main(int argc, char *argv[]) {
-  std::string s = "suka";
   if (argc <= 1) {
     std::cout << "Usage: ./example path/to/file";
     return 0;
@@ -17,7 +16,7 @@ int main(int argc, char *argv[]) {
                        {"pole_poolyushko", DB_INT_32},
                        {"bool_poolyushko", DB_BOOL},
                    }});
-  db.CreateSchema({"SUKO-SUKOO-SUKO",
+  db.CreateSchema({"SCHEMKA-SCHEMKA",
                    {
                        {"AHAHA-AHA-AHAHA", DB_DOUBLE},
                        {"OLOLOLO-OLOLOLO", DB_STRING},
