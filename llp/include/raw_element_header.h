@@ -22,7 +22,6 @@ struct raw_element_header {
 #pragma pack(pop)
 
 // порядок связан с PrimTypes
-#pragma pack(push, 1)
 union ElementData {
   int32_t i_;
   double d_;
@@ -32,8 +31,7 @@ union ElementData {
   explicit ElementData(double d) : d_(d) {}
   explicit ElementData(DbPtr str) : str_(str) {}
   explicit ElementData(bool b) : b_(b) {}
-} PACKED;
-#pragma pack(pop)
+};
 
 #pragma pack(push, 1)
 struct element_value {
