@@ -6,15 +6,17 @@
 struct raw_schema_header {
   PAD(DbPtr, name);
   PAD(DbSize, size);
+  PAD(DbSize, cnt_elements);
   PAD(DbPtr, nxt);
-  raw_schema_header(DbPtr name, DbSize size, DbPtr nxt) : name(name), size(size), nxt(nxt) {}
+  raw_schema_header(DbPtr name, DbSize size, DbSize cnt_elements, DbPtr nxt)
+      : name(name), size(size), cnt_elements(cnt_elements), nxt(nxt) {}
 } PACKED;
 #pragma pack(pop)
 
 #pragma pack(push, 1)
 struct schema_key_value {
   PAD(DbPtr, key);
-  PAD(DataItem, value_type);
+  PAD(DataItemType, value_type);
 } PACKED;
 #pragma pack(pop)
 

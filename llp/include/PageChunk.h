@@ -8,7 +8,7 @@ const DbSize kDefaultChunkSize = sizeof(DbPtr) * 16;
 #ifdef DEBUG
 const DbSize kChunkDataSize = kDefaultChunkSize - CalcPadding(sizeof(DbPtr)) - sizeof(DbPtr) - 16;
 #else
-const DbSize kChunkDataSize = sizeof(DbPtr);
+const DbSize kChunkDataSize = sizeof(DbPtr) * 16 - sizeof(DbPtr);
 #endif
 
 #pragma pack(push, 1)

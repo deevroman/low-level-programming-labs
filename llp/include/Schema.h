@@ -10,12 +10,13 @@
 class Schema {
  public:
   std::string name_;
-  std::map<std::string, DataItem> fields_;
+  int64_t cnt_elements_;
+  std::map<std::string, DataItemType> fields_;
 
  public:
   Schema() = default;
 
-  Schema(std::string name, std::map<std::string, DataItem> fields)
+  Schema(std::string name, std::map<std::string, DataItemType> fields)
       : name_(std::move(name)), fields_(std::move(fields)) {}
   void Print() {
     std::cout << name_ << "\n";

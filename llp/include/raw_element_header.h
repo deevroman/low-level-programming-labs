@@ -5,11 +5,19 @@
 #pragma pack(push, 1)
 struct raw_element_header {
   PAD(DbSize, size);
+  PAD(DbPtr, schema);
   PAD(DbPtr, parent_link);
   PAD(DbPtr, child_link);
+  PAD(DbPtr, pr_brother_link);
   PAD(DbPtr, brother_link);
-  raw_element_header(DbSize size, DbPtr parent_link, DbPtr child_link, DbPtr brother_link)
-      : size(size), parent_link(parent_link), child_link(child_link), brother_link(brother_link) {}
+  raw_element_header(DbSize size, DbPtr schema, DbPtr parent_link, DbPtr child_link, DbPtr pr_brother_link,
+                     DbPtr brother_link)
+      : size(size),
+        schema(schema),
+        parent_link(parent_link),
+        child_link(child_link),
+        pr_brother_link(pr_brother_link),
+        brother_link(brother_link) {}
 } PACKED;
 #pragma pack(pop)
 
@@ -28,9 +36,9 @@ union ElementData {
 #pragma pack(push, 1)
 struct element_value {
   PAD(DbPtr, key);
-  PAD(DataItem, type);
+  PAD(DataItemType, type);
   PAD(ElementData, data);
-  element_value(DbPtr key, DataItem type, const ElementData& data) : key(key), type(type), data(data) {}
+  element_value(DbPtr key, DataItemType type, const ElementData& data) : key(key), type(type), data(data) {}
 } PACKED;
 #pragma pack(pop)
 

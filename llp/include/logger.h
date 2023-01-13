@@ -63,10 +63,6 @@ void _dbg(const char *sdbg, const char *h, TA... a) {
 #define todo(...)
 #endif
 
-#include <string_view>
-
-void Info(std::string_view s) { std::cerr << s << std::endl; }
-
 #define error(...) \
   throw std::runtime_error(std::string("line:") + __FILE__ ":" + std::to_string(__LINE__) + "," + __VA_ARGS__)
 

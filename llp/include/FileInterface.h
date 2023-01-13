@@ -70,6 +70,7 @@ class FileInterface {
             const char *file = __builtin_FILE(), int line = __builtin_LINE()) const {
     std::string from = std::string(file) + ":" + std::to_string(line);
     debug("Read", position, size, from, caller);
+    debug_assert(position >= 0);
     if(!calls_.contains({position, size})){
       error("Bad read");
     }

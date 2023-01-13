@@ -1,23 +1,34 @@
-#ifndef LLP_INCLUDE_SCHEMAHEADER_H_
-#define LLP_INCLUDE_SCHEMAHEADER_H_
+#ifndef LLP_INCLUDE_SCHEMABOX_H_
+#define LLP_INCLUDE_SCHEMABOX_H_
 
 #include "logger.h"
 #include "raw_schema_header.h"
 #include "types.h"
 
-class SchemaHeader {
+class SchemaBox {
  public:
   DbPtr name_{};
   DbSize size_{};
+  DbSize cnt_elements_{};
   DbPtr nxt_{};
   schema_key_value *fields_{};
 
-  SchemaHeader(DbPtr name, DbSize size, DbPtr nxt) : name_(name), size_(size), nxt_(nxt) {
+  SchemaBox(DbPtr name, DbSize size, DbPtr nxt) : name_(name), size_(size), nxt_(nxt) {
     debug("Создаю SchemaHeader", name, size);
     fields_ = reinterpret_cast<schema_key_value *>(new char[GetFlexibleElementSize()]{});
   }
 
-  virtual ~SchemaHeader() { delete[] fields_; }
+  SchemaBox(const SchemaBox &s) {
+    debug("Конструктор копирования SchemaBox");
+    name_ = s.name_;
+    size_ = s.size_;
+    cnt_elements_ = s.cnt_elements_;
+    nxt_ = s.nxt_;
+    fields_ = reinterpret_cast<schema_key_value *>(new char[GetFlexibleElementSize()]{});
+    std::copy(s.fields_, s.fields_ + size_, fields_);
+  }
+
+  virtual ~SchemaBox() { delete[] fields_; }
 
   [[nodiscard]] DbSize GetOnFileSize() const { return sizeof(raw_schema_header) + GetFlexibleElementSize(); }
 
@@ -25,14 +36,15 @@ class SchemaHeader {
 
   [[nodiscard]] Byte *MakePackedSchema() const {
     Byte *buffer = new Byte[GetOnFileSize()];
-    *reinterpret_cast<raw_schema_header *>(buffer) = raw_schema_header(name_, size_, nxt_);
+    *reinterpret_cast<raw_schema_header *>(buffer) = raw_schema_header(name_, size_, cnt_elements_, nxt_);
     std::copy(fields_, fields_ + size_, (schema_key_value *)((buffer + sizeof(raw_schema_header))));
     return buffer;
   }
 
-  explicit SchemaHeader(Byte *buffer) {
+  explicit SchemaBox(Byte *buffer) {
     name_ = reinterpret_cast<raw_schema_header *>(buffer)->name;
     size_ = reinterpret_cast<raw_schema_header *>(buffer)->size;
+    cnt_elements_ = reinterpret_cast<raw_schema_header *>(buffer)->cnt_elements;
     nxt_ = reinterpret_cast<raw_schema_header *>(buffer)->nxt;
     fields_ = reinterpret_cast<schema_key_value *>(new char[GetFlexibleElementSize()]{});
     auto from = (schema_key_value *)((buffer + sizeof(raw_schema_header)));
@@ -57,4 +69,4 @@ class SchemaHeader {
 #endif
 };
 
-#endif  // LLP_INCLUDE_SCHEMAHEADER_H_
+#endif  // LLP_INCLUDE_SCHEMABOX_H_

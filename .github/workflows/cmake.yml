@@ -83,7 +83,11 @@ jobs:
 
       - name: test
         working-directory: ${{github.workspace}}/llp/build
-        run: ctest -C ${{env.BUILD_TYPE}} --output-on-failure
+        run: ctest -C ${{env.BUILD_TYPE}} --output-on-failure --exclude-regex Bench
+      
+      - name: bench
+        working-directory: ${{github.workspace}}/llp/build
+        run: ctest -C ${{env.BUILD_TYPE}} --output-on-failure --tests-regex Bench
   create_release:
     name: "Prelease"
     needs: build
