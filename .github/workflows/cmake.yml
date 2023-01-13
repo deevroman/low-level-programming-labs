@@ -75,7 +75,7 @@ jobs:
           cmake -B ${{github.workspace}}/examples/build ${{matrix.generator}} -DCMAKE_CXX_COMPILER=${{matrix.cxx_compiler}} -DCMAKE_C_COMPILER=${{matrix.c_compiler}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ${{github.workspace}}/examples
           cmake --build ${{github.workspace}}/examples/build --config ${{env.BUILD_TYPE}}
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.os }}-${{ matrix.cxx_compiler || matrix._cxx_compiler}}-llp
           path: examples/build/bin/*/*
@@ -87,13 +87,13 @@ jobs:
       
       - name: bench
         working-directory: ${{github.workspace}}/llp/build
-        run: ctest -C ${{env.BUILD_TYPE}} --output-on-failure --tests-regex Bench
+        run: ctest -C ${{env.BUILD_TYPE}} --output-on-failure --tests-regex Bench -VV
   create_release:
     name: "Prelease"
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
 
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
@@ -106,6 +106,6 @@ jobs:
             ubuntu-latest-clang++-llp
             macos-latest-clang++-llp
             windows-latest-msbuild-llp
-            windows-latest-x86_64-w64-mingw32-g++llp
+            windows-latest-x86_64-w64-mingw32-g++-llp
 
 
