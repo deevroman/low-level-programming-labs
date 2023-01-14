@@ -7,20 +7,24 @@
 ```bash
 git clone https://github.com/deevroman/low-level-programming-labs.git && cd low-level-programming-labs
 # сборка модуля
-cmake -B examples/llp -DCMAKE_BUILD_TYPE=Release llp
+cmake -B llp/build -DCMAKE_BUILD_TYPE=Release llp
 cmake --build llp/build --config Release
 # сборка примера
-cmake -B examples/llp -DCMAKE_BUILD_TYPE=Release llp
+cmake -B examples/build -DCMAKE_BUILD_TYPE=Release examples
 cmake --build examples/build --config Release
 # запуск
-./examples/bin/*/*
+./examples/build/bin/*/*
 ```
 
-### Уже собранное под все платформы
+### Уже собранное
 https://github.com/deevroman/low-level-programming-labs/releases
 
-### Рецепт 
+### Рецепт для Github Action, который собирает и тестирует под Ubuntu, macOS, Windows
 https://github.com/deevroman/low-level-programming-labs/blob/master/.github/workflows/cmake.yml
+
+### Отчёты
+
+- [Первая лабораторная](reports/lab1.pdf)
 
 ---
 
