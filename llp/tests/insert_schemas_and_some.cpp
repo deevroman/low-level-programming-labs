@@ -13,19 +13,19 @@ TEST(InsertSchemasAndListTest, TwoInserts) {
   db.CreateSchema({"SCHEMKA-SCHEMKA",
                    {
                        {"AHAHA-AHA-AHAHA", DB_DOUBLE},
-                       {"OLOLOLO-OLOLOLO", DB_STRING},
+                       {"OresOLO-OresOLO", DB_STRING},
                    }});
-  auto kek = db.GetSchemas();
-  ASSERT_TRUE(kek.ok_);
-  auto lol = get<std::vector<Schema>>(kek.payload_);
-  ASSERT_EQ(lol[1].name_, "BOM-BOM-BOM-BOM");
-  ASSERT_EQ(lol[1].fields_["bool_poolyushko"], DB_BOOL);
-  ASSERT_EQ(lol[1].fields_["pole_poolyushko"], DB_INT_32);
-  ASSERT_EQ(lol[0].name_, "SCHEMKA-SCHEMKA");
-  ASSERT_EQ(lol[0].fields_["AHAHA-AHA-AHAHA"], DB_DOUBLE);
-  ASSERT_EQ(lol[0].fields_["OLOLOLO-OLOLOLO"], DB_STRING);
+  auto _ = db.GetSchemas();
+  ASSERT_TRUE(_.ok_);
+  auto res = get<std::vector<Schema>>(_.payload_);
+  ASSERT_EQ(res[1].name_, "BOM-BOM-BOM-BOM");
+  ASSERT_EQ(res[1].fields_["bool_poolyushko"], DB_BOOL);
+  ASSERT_EQ(res[1].fields_["pole_poolyushko"], DB_INT_32);
+  ASSERT_EQ(res[0].name_, "SCHEMKA-SCHEMKA");
+  ASSERT_EQ(res[0].fields_["AHAHA-AHA-AHAHA"], DB_DOUBLE);
+  ASSERT_EQ(res[0].fields_["OresOLO-OresOLO"], DB_STRING);
   
-  for (auto now : lol) {
+  for (auto now : res) {
     now.Print();
     std::cout << std::endl;
   }
@@ -42,25 +42,25 @@ TEST(InsertSchemasAndListTest, DuplicateInsert) {
   db.CreateSchema({"SCHEMKA-SCHEMKA",
                    {
                        {"AHAHA-AHA-AHAHA", DB_DOUBLE},
-                       {"OLOLOLO-OLOLOLO", DB_STRING},
+                       {"OresOLO-OresOLO", DB_STRING},
                    }});
   db.CreateSchema({"WEWE-WEWEE-WEWE",
                    {
                        {"12345-678-90123", DB_DOUBLE},
                        {"7654321-1234567", DB_STRING},
                    }});
-  auto kek = db.GetSchemas();
-  ASSERT_TRUE(kek.ok_);
-  auto lol = get<std::vector<Schema>>(kek.payload_);
-  ASSERT_EQ(lol[2].name_, "BOM-BOM-BOM-BOM");
-  ASSERT_EQ(lol[2].fields_["bool_poolyushko"], DB_BOOL);
-  ASSERT_EQ(lol[2].fields_["pole_poolyushko"], DB_INT_32);
-  ASSERT_EQ(lol[1].name_, "SCHEMKA-SCHEMKA");
-  ASSERT_EQ(lol[1].fields_["AHAHA-AHA-AHAHA"], DB_DOUBLE);
-  ASSERT_EQ(lol[1].fields_["OLOLOLO-OLOLOLO"], DB_STRING);
-  ASSERT_EQ(lol[0].name_, "WEWE-WEWEE-WEWE");
-  ASSERT_EQ(lol[0].fields_["12345-678-90123"], DB_DOUBLE);
-  ASSERT_EQ(lol[0].fields_["7654321-1234567"], DB_STRING);
+  auto _ = db.GetSchemas();
+  ASSERT_TRUE(_.ok_);
+  auto res = get<std::vector<Schema>>(_.payload_);
+  ASSERT_EQ(res[2].name_, "BOM-BOM-BOM-BOM");
+  ASSERT_EQ(res[2].fields_["bool_poolyushko"], DB_BOOL);
+  ASSERT_EQ(res[2].fields_["pole_poolyushko"], DB_INT_32);
+  ASSERT_EQ(res[1].name_, "SCHEMKA-SCHEMKA");
+  ASSERT_EQ(res[1].fields_["AHAHA-AHA-AHAHA"], DB_DOUBLE);
+  ASSERT_EQ(res[1].fields_["OresOLO-OresOLO"], DB_STRING);
+  ASSERT_EQ(res[0].name_, "WEWE-WEWEE-WEWE");
+  ASSERT_EQ(res[0].fields_["12345-678-90123"], DB_DOUBLE);
+  ASSERT_EQ(res[0].fields_["7654321-1234567"], DB_STRING);
 
   auto fail = db.CreateSchema({"WEWE-WEWEE-WEWE",
                                {
@@ -69,7 +69,7 @@ TEST(InsertSchemasAndListTest, DuplicateInsert) {
                                }});
   ASSERT_FALSE(fail.ok_);
   
-  for (auto now : lol) {
+  for (auto now : res) {
     now.Print();
     std::cout << std::endl;
   }
@@ -86,25 +86,25 @@ TEST(InsertSchemasAndRemove, DeleteSchemas) {
   db.CreateSchema({"SCHEMKA-SCHEMKA",
                    {
                        {"AHAHA-AHA-AHAHA", DB_DOUBLE},
-                       {"OLOLOLO-OLOLOLO", DB_STRING},
+                       {"OresOLO-OresOLO", DB_STRING},
                    }});
   db.CreateSchema({"WEWE-WEWEE-WEWE",
                    {
                        {"12345-678-90123", DB_DOUBLE},
                        {"7654321-1234567", DB_STRING},
                    }});
-  auto kek = db.GetSchemas();
-  ASSERT_TRUE(kek.ok_);
-  auto lol = get<std::vector<Schema>>(kek.payload_);
-  ASSERT_EQ(lol[2].name_, "BOM-BOM-BOM-BOM");
-  ASSERT_EQ(lol[2].fields_["bool_poolyushko"], DB_BOOL);
-  ASSERT_EQ(lol[2].fields_["pole_poolyushko"], DB_INT_32);
-  ASSERT_EQ(lol[1].name_, "SCHEMKA-SCHEMKA");
-  ASSERT_EQ(lol[1].fields_["AHAHA-AHA-AHAHA"], DB_DOUBLE);
-  ASSERT_EQ(lol[1].fields_["OLOLOLO-OLOLOLO"], DB_STRING);
-  ASSERT_EQ(lol[0].name_, "WEWE-WEWEE-WEWE");
-  ASSERT_EQ(lol[0].fields_["12345-678-90123"], DB_DOUBLE);
-  ASSERT_EQ(lol[0].fields_["7654321-1234567"], DB_STRING);
+  auto _ = db.GetSchemas();
+  ASSERT_TRUE(_.ok_);
+  auto res = get<std::vector<Schema>>(_.payload_);
+  ASSERT_EQ(res[2].name_, "BOM-BOM-BOM-BOM");
+  ASSERT_EQ(res[2].fields_["bool_poolyushko"], DB_BOOL);
+  ASSERT_EQ(res[2].fields_["pole_poolyushko"], DB_INT_32);
+  ASSERT_EQ(res[1].name_, "SCHEMKA-SCHEMKA");
+  ASSERT_EQ(res[1].fields_["AHAHA-AHA-AHAHA"], DB_DOUBLE);
+  ASSERT_EQ(res[1].fields_["OresOLO-OresOLO"], DB_STRING);
+  ASSERT_EQ(res[0].name_, "WEWE-WEWEE-WEWE");
+  ASSERT_EQ(res[0].fields_["12345-678-90123"], DB_DOUBLE);
+  ASSERT_EQ(res[0].fields_["7654321-1234567"], DB_STRING);
 
   auto fail = db.CreateSchema({"WEWE-WEWEE-WEWE",
                                {
@@ -116,15 +116,15 @@ TEST(InsertSchemasAndRemove, DeleteSchemas) {
   db.DeleteSchema("BOM-BOM-BOM-BOM");
   db.DeleteSchema("WEWE-WEWEE-WEWE");
 
-  kek = db.GetSchemas();
-  ASSERT_TRUE(kek.ok_);
-  auto lal = get<std::vector<Schema>>(kek.payload_);
-  ASSERT_EQ(lal.size(), 1);
-  ASSERT_EQ(lal[0].name_, "SCHEMKA-SCHEMKA");
-  ASSERT_EQ(lal[0].fields_["AHAHA-AHA-AHAHA"], DB_DOUBLE);
-  ASSERT_EQ(lal[0].fields_["OLOLOLO-OLOLOLO"], DB_STRING);
+  _ = db.GetSchemas();
+  ASSERT_TRUE(_.ok_);
+  res = get<std::vector<Schema>>(_.payload_);
+  ASSERT_EQ(res.size(), 1);
+  ASSERT_EQ(res[0].name_, "SCHEMKA-SCHEMKA");
+  ASSERT_EQ(res[0].fields_["AHAHA-AHA-AHAHA"], DB_DOUBLE);
+  ASSERT_EQ(res[0].fields_["OresOLO-OresOLO"], DB_STRING);
 
-  for (auto now : lal) {
+  for (auto now : res) {
     now.Print();
     std::cout << std::endl;
   }

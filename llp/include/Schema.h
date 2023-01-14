@@ -24,14 +24,13 @@ class Schema {
       std::cout << k << ":" << v << "\n";
     }
   }
+  DbSize GetElementPackedSize() { return sizeof(raw_element_header) + fields_.size() * sizeof(element_value); }
 };
 
 class SchemaWithPosition : public Schema {
  public:
   DbPtr position_{};
-  bool Valid(){
-    return position_;
-  }
+  bool Valid() { return position_; }
 };
 
 #endif  // LLP_INCLUDE_SCHEMA_H_

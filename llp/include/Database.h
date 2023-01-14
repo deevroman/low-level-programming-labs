@@ -37,14 +37,14 @@ class Database {
   DbPtr AllocPage(FileChunkedList<PageMarker> &elements_list);
 
   template <uint64_t PageMarker>
-  DbPtr WriteStruct(void *target_struct, DbSize size, FileChunkedList<PageMarker> &elements_list);
+  DbPtr WriteBytesBatch(Byte *target_batch, DbSize size, FileChunkedList<PageMarker> &elements_list);
 
-  [[nodiscard]] Byte *ReadStruct(DbPtr target_struct) const;
+  [[nodiscard]] std::unique_ptr<Byte[]> ReadStruct(DbPtr target_batch, DbSize expected_size) const;
 
-  void RewriteStruct(void *target_struct, DbSize size, DbPtr start) const;
+  void RewriteBytesBatch(Byte *target_batch, DbSize size, DbPtr start) const;
 
   template <uint64_t PageMarker>
-  void CleanStruct(DbPtr target_struct, FileChunkedList<PageMarker> &elements_list);
+  void FreeBytesBatch(DbPtr target_batch, FileChunkedList<PageMarker> &elements_list);
 
   [[nodiscard]] bool ValidateElementByPtr(DbPtr ptr) const;
 
@@ -57,8 +57,8 @@ class Database {
   Schema ReadSchema(DbPtr ptr);
   DbPtr SaveSchema(const SchemaBox &sh);
 
-  ElementBox ReadUnpackedElement(DbPtr ptr);
-  Element ReadElement(DbPtr ptr);
+  ElementBox ReadUnpackedElement(DbPtr ptr, DbSize expected_size);
+  Element ReadElement(DbPtr ptr, DbSize expected_size);
   DbPtr SaveElement(const ElementBox &el);
 
   void UpdateMasterHeader();
@@ -104,7 +104,6 @@ class Database {
 
   class ElementsTreeIterator {
     mutable Database *db_;
-    DbPtr prev_ptr_{};
 
    public:
     DbPtr current_ptr_{};
@@ -125,34 +124,34 @@ class Database {
 
 void Database::SchemasListIterator::Remove() {
   debug("Удаляю схему номер", cur_index_);
-  auto unpacked_schema = db_->ReadUnpackedSchema(current_ptr_);
-  debug_assert(unpacked_schema.Validate(*this->db_->file_));
+  auto schema_box = db_->ReadUnpackedSchema(current_ptr_);
+  debug_assert(schema_box.Validate(*this->db_->file_));
 
   debug("Удаляю ссылки на строки в схеме");
-  db_->RemoveString(unpacked_schema.name_);
-  for (int i = 0; i < unpacked_schema.size_; i++) {
-    db_->RemoveString(unpacked_schema.fields_[i].key);
+  db_->RemoveString(schema_box.name_);
+  for (int i = 0; i < schema_box.size_; i++) {
+    db_->RemoveString(schema_box.fields_[i].key);
   }
 
   if (prev_ptr_ != 0) {
     // прочесть предыдущую схему и изменить ссылку
-    auto unpacked_schema_2 = db_->ReadUnpackedSchema(prev_ptr_);
-    unpacked_schema_2.nxt_ = unpacked_schema.nxt_;
+    auto schema_box_2 = db_->ReadUnpackedSchema(prev_ptr_);
+    schema_box_2.nxt_ = schema_box.nxt_;
     // записать обратно предыдущую
-    auto raw = std::unique_ptr<Byte[]>(unpacked_schema_2.MakePackedSchema());
-    this->db_->RewriteStruct(raw.get(), unpacked_schema_2.GetOnFileSize(), prev_ptr_);
+    auto raw = std::unique_ptr<Byte[]>(schema_box_2.MakePackedSchema());
+    this->db_->RewriteBytesBatch(raw.get(), schema_box_2.GetOnFileSize(), prev_ptr_);
   } else {
-    this->db_->master_header_.schemas.first_element = unpacked_schema.nxt_;
+    this->db_->master_header_.schemas.first_element = schema_box.nxt_;
   }
 
-  this->db_->CleanStruct(current_ptr_, this->db_->master_header_.schemas);
+  this->db_->FreeBytesBatch(current_ptr_, this->db_->master_header_.schemas);
   this->db_->master_header_.schemas.count--;
   this->db_->UpdateMasterHeader();
 }
 
 bool Database::ElementsTreeIterator::Remove() {
-  debug("Удаляю элемент номер");
-  auto for_delete_elem = db_->ReadUnpackedElement(current_ptr_);
+  debug("Удаляю элемент", current_ptr_);
+  auto for_delete_elem = db_->ReadUnpackedElement(current_ptr_, -1);
 
   if (for_delete_elem.child_link_ != 0) {
     debug("Удаление не листового элемента");
@@ -169,26 +168,26 @@ bool Database::ElementsTreeIterator::Remove() {
   if (for_delete_elem.parent_link_ != 0) {
     if (for_delete_elem.prev_brother_link_ == 0) {
       // обновить родительскую ноду, если удаляется первый сын
-      auto parent_elem = db_->ReadUnpackedElement(for_delete_elem.parent_link_);
+      auto parent_elem = db_->ReadUnpackedElement(for_delete_elem.parent_link_, -1);
       parent_elem.child_link_ = for_delete_elem.brother_link_;
       auto raw = std::unique_ptr<Byte[]>(parent_elem.MakePackedElement());
-      this->db_->RewriteStruct(raw.get(), parent_elem.GetOnFileSize(), for_delete_elem.parent_link_);
+      this->db_->RewriteBytesBatch(raw.get(), parent_elem.GetOnFileSize(), for_delete_elem.parent_link_);
     } else {
-      auto prev_brother_elem = db_->ReadUnpackedElement(for_delete_elem.prev_brother_link_);
+      auto prev_brother_elem = db_->ReadUnpackedElement(for_delete_elem.prev_brother_link_, -1);
       prev_brother_elem.brother_link_ = for_delete_elem.brother_link_;
       auto raw = std::unique_ptr<Byte[]>(prev_brother_elem.MakePackedElement());
-      this->db_->RewriteStruct(raw.get(), prev_brother_elem.GetOnFileSize(), for_delete_elem.prev_brother_link_);
+      this->db_->RewriteBytesBatch(raw.get(), prev_brother_elem.GetOnFileSize(), for_delete_elem.prev_brother_link_);
     }
   } else {
     this->db_->master_header_.nodes.first_element = 0;
   }
 
-  this->db_->CleanStruct(current_ptr_, this->db_->master_header_.nodes);
+  this->db_->FreeBytesBatch(current_ptr_, this->db_->master_header_.nodes);
 
-  auto unpacked_schema = db_->ReadUnpackedSchema(for_delete_elem.schema_);
-  unpacked_schema.cnt_elements_--;
-  auto raw = std::unique_ptr<Byte[]>(unpacked_schema.MakePackedSchema());
-  db_->RewriteStruct(raw.get(), unpacked_schema.GetOnFileSize(), for_delete_elem.schema_);
+  auto schema_box = db_->ReadUnpackedSchema(for_delete_elem.schema_);
+  schema_box.cnt_elements_--;
+  auto raw = std::unique_ptr<Byte[]>(schema_box.MakePackedSchema());
+  db_->RewriteBytesBatch(raw.get(), schema_box.GetOnFileSize(), for_delete_elem.schema_);
 
   this->db_->master_header_.nodes.count--;
   this->db_->UpdateMasterHeader();
@@ -205,25 +204,24 @@ bool Database::ElementsTreeIterator::Remove() {
 SchemaWithPosition Database::SchemasListIterator::Read() { return {db_->ReadSchema(current_ptr_), current_ptr_}; }
 
 Schema Database::ReadSchema(DbPtr ptr) {
-  auto unpacked_schema = ReadUnpackedSchema(ptr);
+  auto schema_box = ReadUnpackedSchema(ptr);
   auto result = Schema();
-  result.name_ = ReadString(unpacked_schema.name_);
-  result.cnt_elements_ = unpacked_schema.cnt_elements_;
-  for (int i = 0; i < unpacked_schema.size_; i++) {
-    result.fields_[ReadString(unpacked_schema.fields_[i].key)] = unpacked_schema.fields_[i].value_type;
+  result.name_ = ReadString(schema_box.name_);
+  result.cnt_elements_ = schema_box.cnt_elements_;
+  for (int i = 0; i < schema_box.size_; i++) {
+    result.fields_[ReadString(schema_box.fields_[i].key)] = schema_box.fields_[i].value_type;
   }
   return result;
 }
 
 SchemaBox Database::ReadUnpackedSchema(DbPtr ptr) {
-  std::unique_ptr<Byte[]> buffer(ReadStruct(ptr));
+  auto buffer = ReadStruct(ptr, -1);
   debug_assert(SchemaBox(buffer.get()).Validate(*this->file_));
   return SchemaBox(buffer.get());
 }
 
-Element Database::ReadElement(DbPtr ptr) {
-  std::unique_ptr<Byte[]> buffer(ReadStruct(ptr));
-  auto unpacked_element = ElementBox(buffer.get());
+Element Database::ReadElement(DbPtr ptr, DbSize expected_size) {
+  auto unpacked_element = ElementBox(ReadStruct(ptr, expected_size).get());
   auto result = Element();
   result.id_ = ptr;
   result.schema_ = unpacked_element.schema_;
@@ -241,7 +239,9 @@ Element Database::ReadElement(DbPtr ptr) {
   return result;
 }
 
-ElementWithPosition Database::ElementsTreeIterator::Read() { return {db_->ReadElement(current_ptr_), current_ptr_}; }
+ElementWithPosition Database::ElementsTreeIterator::Read() {
+  return {db_->ReadElement(current_ptr_, -1), current_ptr_};
+}
 
 void Database::SchemasListIterator::Next() {
   prev_ptr_ = current_ptr_;
@@ -253,7 +253,7 @@ void Database::ElementsTreeIterator::Next() {
     debug("Итератор достиг корня");
     return;
   }
-  auto eh = db_->ReadUnpackedElement(current_ptr_);
+  auto eh = db_->ReadUnpackedElement(current_ptr_, -1);
   if (eh.brother_link_ != 0) {
     current_ptr_ = eh.brother_link_;
     Down();
@@ -274,10 +274,10 @@ Database::ElementsTreeIterator::ElementsTreeIterator(Database *db, FileChunkedLi
 }
 
 void Database::ElementsTreeIterator::Down() {
-  auto cur = db_->ReadUnpackedElement(current_ptr_).child_link_;
+  auto cur = db_->ReadUnpackedElement(current_ptr_, -1).child_link_;
   while (cur != 0) {
     current_ptr_ = cur;
-    cur = db_->ReadUnpackedElement(current_ptr_).child_link_;
+    cur = db_->ReadUnpackedElement(current_ptr_, -1).child_link_;
   }
 }
 
@@ -347,7 +347,8 @@ DbPtr Database::AllocPage(FileChunkedList<PageMarker> &elements_list) {
 #endif
     buffer.get()[i] = cur_chunk;
   }
-  buffer.get()[chunk_cnt - 1].nxt_chunk = 0; // из-за этого нельзя аллоцировать новые страницы, если есть свободное место
+  // из-за этого нельзя аллоцировать новые страницы, если есть свободное место
+  buffer.get()[chunk_cnt - 1].nxt_chunk = 0;
   file_->Write(buffer.get(), size);
 
   auto res = master_header_.file_end;
@@ -358,14 +359,13 @@ DbPtr Database::AllocPage(FileChunkedList<PageMarker> &elements_list) {
 }
 
 template <uint64_t PageMarker>
-DbPtr Database::WriteStruct(void *target_struct, DbSize size, FileChunkedList<PageMarker> &elements_list) {
+DbPtr Database::WriteBytesBatch(Byte *target_batch, DbSize size, FileChunkedList<PageMarker> &elements_list) {
   debug("Записываю в файл структуру", size, elements_list.first_element, elements_list.first_free_element);
   assert(elements_list.first_free_element);
   assert(size != 0);
   DbPtr result_position = elements_list.first_free_element;
 
   DbPtr next_free = -elements_list.first_free_element;
-  Byte *byted_target_struct = static_cast<Byte *>(target_struct);
   PageChunk cur_chunk, next_chunk;
   int i = 0;
   for (; i + kChunkDataSize < size; i += kChunkDataSize) {
@@ -375,7 +375,7 @@ DbPtr Database::WriteStruct(void *target_struct, DbSize size, FileChunkedList<Pa
       next_chunk.nxt_chunk = -elements_list.first_free_element;
     }
     cur_chunk.nxt_chunk = (-1) * next_chunk.nxt_chunk;
-    std::copy(byted_target_struct + i, byted_target_struct + i + kChunkDataSize, cur_chunk.data);
+    std::copy(target_batch + i, target_batch + i + kChunkDataSize, cur_chunk.data);
     debug("Занимаю чанк с", -next_free);
     this->file_->Write(&cur_chunk, sizeof(PageChunk), -next_free);
     next_free = next_chunk.nxt_chunk;
@@ -384,7 +384,7 @@ DbPtr Database::WriteStruct(void *target_struct, DbSize size, FileChunkedList<Pa
   this->file_->Read(&next_chunk, sizeof(PageChunk), -next_free);
   cur_chunk.nxt_chunk = 0;
   std::fill(cur_chunk.data, cur_chunk.data + sizeof(cur_chunk.data), 0);
-  std::copy(byted_target_struct + i, byted_target_struct + std::min(i + kChunkDataSize, size), cur_chunk.data);
+  std::copy(target_batch + i, target_batch + std::min(i + kChunkDataSize, size), cur_chunk.data);
   debug("Занимаю последний чанк структуры", next_free, next_chunk.nxt_chunk);
   this->file_->Write(&cur_chunk, sizeof(PageChunk), -next_free);
 
@@ -401,40 +401,39 @@ DbPtr Database::WriteStruct(void *target_struct, DbSize size, FileChunkedList<Pa
 }
 
 template <uint64_t PageMarker>
-void Database::CleanStruct(DbPtr target_struct, FileChunkedList<PageMarker> &elements_list) {
+void Database::FreeBytesBatch(DbPtr target_batch, FileChunkedList<PageMarker> &elements_list) {
   assert(elements_list.first_free_element);
   DbPtr old_free_start = elements_list.first_free_element;
-  elements_list.first_free_element = target_struct;
+  elements_list.first_free_element = target_batch;
 
   PageChunk cur_chunk;
-  DbPtr next_chunk = target_struct;
+  DbPtr next_chunk = target_batch;
   while (next_chunk != 0) {
-    target_struct = next_chunk;
-    this->file_->Read(&cur_chunk, sizeof(PageChunk), target_struct);
+    target_batch = next_chunk;
+    this->file_->Read(&cur_chunk, sizeof(PageChunk), target_batch);
     next_chunk = cur_chunk.nxt_chunk;
     std::fill(cur_chunk.data, cur_chunk.data + sizeof(cur_chunk.data), 0);
     cur_chunk.nxt_chunk *= -1;
-    this->file_->Write(&cur_chunk, sizeof(PageChunk), target_struct);
+    this->file_->Write(&cur_chunk, sizeof(PageChunk), target_batch);
   }
   // последний чанк должен указывать на старый пустой чанк-кандидат
   cur_chunk.nxt_chunk = old_free_start;
   cur_chunk.nxt_chunk *= -1;
-  this->file_->Write(&cur_chunk, sizeof(PageChunk), target_struct);
+  this->file_->Write(&cur_chunk, sizeof(PageChunk), target_batch);
   UpdateMasterHeader();
 }
 
-void Database::RewriteStruct(void *target_struct, DbSize size, DbPtr start) const {  // todo refactor copy paste
+void Database::RewriteBytesBatch(Byte *target_batch, DbSize size, DbPtr start) const { 
   debug_assert(start);
   debug_assert(size != 0);
 
   DbPtr nxt = start;
-  Byte *byted_target_struct = static_cast<Byte *>(target_struct);
   PageChunk cur_chunk, next_chunk;
   int i = 0;
   for (; i + kChunkDataSize < size; i += kChunkDataSize) {
     this->file_->Read(&next_chunk, sizeof(PageChunk), nxt);
     cur_chunk.nxt_chunk = next_chunk.nxt_chunk;
-    std::copy(byted_target_struct + i, byted_target_struct + i + kChunkDataSize, cur_chunk.data);
+    std::copy(target_batch + i, target_batch + i + kChunkDataSize, cur_chunk.data);
     this->file_->Write(&cur_chunk, sizeof(PageChunk), nxt);
     nxt = next_chunk.nxt_chunk;
     debug_assert(nxt > 0);
@@ -443,30 +442,32 @@ void Database::RewriteStruct(void *target_struct, DbSize size, DbPtr start) cons
   this->file_->Read(&next_chunk, sizeof(PageChunk), nxt);
   cur_chunk.nxt_chunk = 0;
   std::fill(cur_chunk.data, cur_chunk.data + sizeof(cur_chunk.data), 0);
-  std::copy(byted_target_struct + i, byted_target_struct + std::min(i + kChunkDataSize, size), cur_chunk.data);
+  std::copy(target_batch + i, target_batch + std::min(i + kChunkDataSize, size), cur_chunk.data);
   this->file_->Write(&cur_chunk, sizeof(PageChunk), nxt);
 }
 
-Byte *Database::ReadStruct(DbPtr target_struct) const {
-  debug_assert(target_struct);
+std::unique_ptr<Byte[]> Database::ReadStruct(DbPtr target_batch, DbSize expected_size) const {
+  debug_assert(target_batch);
   std::vector<PageChunk> buffer;
-  while (target_struct != 0) {
+  while (target_batch != 0) {
     buffer.emplace_back();
-    this->file_->Read(&(buffer.back()), sizeof(PageChunk), target_struct);
-    target_struct = buffer.back().nxt_chunk;
+    this->file_->Read(&(buffer.back()), sizeof(PageChunk), target_batch);
+    target_batch = buffer.back().nxt_chunk;
+  }
+  if (expected_size != -1 && buffer.size() * sizeof(PageChunk::data) < expected_size) {
+    throw std::invalid_argument("Incorrect struct ptr");
   }
   Byte *result = new Byte[buffer.size() * sizeof(PageChunk::data)];
   for (int res_ind = 0; auto now : buffer) {
     std::copy(now.data, now.data + sizeof(now.data), &(result[res_ind]));
     res_ind += +sizeof(now.data);
   }
-  return result;
+  return std::unique_ptr<Byte[]>(result);
 }
 
 std::string Database::ReadString(const DbPtr ptr) const {
   debug_assert(ptr > 0);
-  std::unique_ptr<Byte[]> buffer(ReadStruct(ptr));
-  auto result = std::string(reinterpret_cast<const char *>(buffer.get()));
+  auto result = std::string(reinterpret_cast<const char *>(ReadStruct(ptr, 0).get()));
   debug("Считана строка", result);
   return result;
 }
@@ -474,7 +475,7 @@ std::string Database::ReadString(const DbPtr ptr) const {
 DbPtr Database::SaveString(const std::string &s) {
   debug("Сохраняю строку", s);
   debug_assert(master_header_.strings.first_free_element != 0);
-  return WriteStruct((void *)s.c_str(), s.size() + 1, master_header_.strings);
+  return WriteBytesBatch((Byte *)s.c_str(), s.size() + 1, master_header_.strings);
 }
 
 Database::Database(const std::string &file_path, bool overwrite) {
@@ -514,7 +515,7 @@ Result Database::GetElementByPath(const std::vector<int64_t> &path) {
   for (auto now_id : path) {
     cur_id = nxt;
     do {
-      ElementBox cur_elem = ReadUnpackedElement(cur_id);
+      ElementBox cur_elem = ReadUnpackedElement(cur_id, -1);
       if (now_id == cur_id) {
         nxt = cur_elem.child_link_;
         break;
@@ -525,7 +526,7 @@ Result Database::GetElementByPath(const std::vector<int64_t> &path) {
       return {false, "Path not found"};
     }
   }
-  return {true, "", ResultPayload(ReadElement(cur_id))};
+  return {true, "", ResultPayload(ReadElement(cur_id, -1))};
 }
 
 Result Database::GetElements(const select_query &args) {
@@ -576,7 +577,7 @@ Result Database::UpdateElements(update_query args) {
   for (int i = 0; i < master_header_.nodes.count; i++) {
     auto cur = it.Read();
     if (args.selector.CheckConditionals(cur)) {
-      auto el = ReadUnpackedElement(cur.position_);
+      auto el = ReadUnpackedElement(cur.position_, -1);
       for (int j = 0; const auto &[k, type] : schema.fields_) {
         if (args.new_fields.find(k) != args.new_fields.end()) {
           if (type == DB_STRING) {
@@ -593,7 +594,7 @@ Result Database::UpdateElements(update_query args) {
         j++;
       }
       auto raw = std::unique_ptr<Byte[]>(el.MakePackedElement());
-      RewriteStruct(raw.get(), el.GetOnFileSize(), cur.position_);
+      RewriteBytesBatch(raw.get(), el.GetOnFileSize(), cur.position_);
     }
     it.Next();
   }
@@ -629,9 +630,9 @@ Result Database::InsertElement(insert_query args) {
   auto el = ElementBox(args.fields.size(), schema.position_, args.parent_id, 0);
 
   auto schema_fields = std::vector<DbPtr>();
-  auto unpacked_schema = ReadUnpackedSchema(schema.position_);
-  for (auto i = 0; i < unpacked_schema.size_; i++) {
-    schema_fields.push_back(unpacked_schema.fields_[i].key);
+  auto schema_box = ReadUnpackedSchema(schema.position_);
+  for (auto i = 0; i < schema_box.size_; i++) {
+    schema_fields.push_back(schema_box.fields_[i].key);
   }
 
   for (int i = 0; auto [k, v] : args.fields) {
@@ -653,28 +654,34 @@ Result Database::InsertElement(insert_query args) {
     master_header_.nodes.first_element = SaveElement(el);
   } else {
     // нужно обновить родителя
-    auto parent = ReadUnpackedElement(args.parent_id);
-    auto new_brother = parent.child_link_;
 
-    parent.child_link_ = master_header_.nodes.first_free_element;
-    auto raw = std::unique_ptr<Byte[]>(parent.MakePackedElement());
-    RewriteStruct(raw.get(), parent.GetOnFileSize(), args.parent_id);
-    // записать сам элемент
-    el.parent_link_ = args.parent_id;
-    el.brother_link_ = new_brother;
-    SaveElement(el);
-    // обновить нового брата
-    if (new_brother != 0) {
-      auto brother = ReadUnpackedElement(new_brother);
-      brother.prev_brother_link_ = id;
-      auto raw_2 = std::unique_ptr<Byte[]>(brother.MakePackedElement());
-      RewriteStruct(raw_2.get(), brother.GetOnFileSize(), new_brother);
+    try {
+      auto parent = ReadUnpackedElement(args.parent_id, schema.GetElementPackedSize());
+      auto new_brother = parent.child_link_;
+
+      parent.child_link_ = master_header_.nodes.first_free_element;
+      auto raw = std::unique_ptr<Byte[]>(parent.MakePackedElement());
+      RewriteBytesBatch(raw.get(), parent.GetOnFileSize(), args.parent_id);
+      // записать сам элемент
+      el.parent_link_ = args.parent_id;
+      el.brother_link_ = new_brother;
+      SaveElement(el);
+
+      // обновить нового брата
+      if (new_brother != 0) {
+        auto brother = ReadUnpackedElement(new_brother, -1);
+        brother.prev_brother_link_ = id;
+        auto raw_2 = std::unique_ptr<Byte[]>(brother.MakePackedElement());
+        RewriteBytesBatch(raw_2.get(), brother.GetOnFileSize(), new_brother);
+      }
+    } catch (const std::invalid_argument &e) {
+      return {false, "Invalid parent id"};
     }
   }
 
-  unpacked_schema.cnt_elements_++;
-  auto raw = std::unique_ptr<Byte[]>(unpacked_schema.MakePackedSchema());
-  RewriteStruct(raw.get(), unpacked_schema.GetOnFileSize(), schema.position_);
+  schema_box.cnt_elements_++;
+  auto raw = std::unique_ptr<Byte[]>(schema_box.MakePackedSchema());
+  RewriteBytesBatch(raw.get(), schema_box.GetOnFileSize(), schema.position_);
   master_header_.nodes.count++;
 
   UpdateMasterHeader();
@@ -695,7 +702,7 @@ Result Database::GetSchemas() const {
 DbPtr Database::SaveSchema(const SchemaBox &sh) {
   debug("Записываю схему");
   auto raw = std::unique_ptr<Byte[]>(sh.MakePackedSchema());
-  DbPtr result = WriteStruct(raw.get(), sh.GetOnFileSize(), master_header_.schemas);
+  DbPtr result = WriteBytesBatch(raw.get(), sh.GetOnFileSize(), master_header_.schemas);
 
   master_header_.schemas.count++;
   UpdateMasterHeader();
@@ -724,6 +731,10 @@ Result Database::DeleteSchema(const DeleteSchemaQuery &name) {
 
 Result Database::DeleteElement(DeleteQueryByIdQuery id) {
   debug("Запрос на удаление элемента");
+  if (!ValidateElementByPtr(id)) {
+    debug("Невалидный id для удаления");
+    return {false, "Invalid id"};
+  }
   auto it = ElementsTreeIterator(this, master_header_.nodes);
   for (int i = 0; i < master_header_.nodes.count; i++) {
     auto cur = it.Read();
@@ -789,7 +800,7 @@ Result Database::CreateSchema(const CreateSchemaQuery &args) {
 
 void Database::RemoveString(DbPtr ptr) {
   debug("Удаляю строку начиная с", ptr);
-  CleanStruct(ptr, master_header_.strings);
+  FreeBytesBatch(ptr, master_header_.strings);
 }
 
 SchemaWithPosition Database::GetSchemaByName(const std::string &name) const {
@@ -812,19 +823,18 @@ void Database::UpdateMasterHeader() { this->file_->Write(&master_header_, sizeof
 DbPtr Database::SaveElement(const ElementBox &el) {
   debug("Записываю элемент");
   auto raw = std::unique_ptr<Byte[]>(el.MakePackedElement());
-  DbPtr result = WriteStruct(raw.get(), el.GetOnFileSize(), master_header_.nodes);
+  DbPtr result = WriteBytesBatch(raw.get(), el.GetOnFileSize(), master_header_.nodes);
 
   debug("Элемент записан");
   return result;
 }
 
-ElementBox Database::ReadUnpackedElement(DbPtr ptr) {
-  std::unique_ptr<Byte[]> buffer(ReadStruct(ptr));
-  return ElementBox(buffer.get());
+ElementBox Database::ReadUnpackedElement(DbPtr ptr, DbSize expected_size) {
+  return ElementBox(ReadStruct(ptr, expected_size).get());
 }
 
 bool Database::ValidateElementByPtr(DbPtr ptr) const {
-  if (ptr < sizeof(file_header)) {
+  if (ptr < (DbPtr)sizeof(file_header)) {
     return false;
   }
   DbPtr page_header_address = ptr - (ptr - sizeof(file_header)) % (sizeof(page_header) + kDefaultPageSize);
