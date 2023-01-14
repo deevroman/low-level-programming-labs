@@ -65,7 +65,7 @@ class Element {
     std::cout << "id: " << id_ << "\n";
     std::cout << "schema: " << schema_ << "\n";
     for (auto [k, v] : fields_) {
-      std::cout << k << ":";
+      std::cout << k << ": ";
       if (v.index() == DB_STRING) {
         std::cout << get<std::string>(v);
       } else if (v.index() == DB_INT_32) {

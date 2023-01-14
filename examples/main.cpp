@@ -1,9 +1,9 @@
 #ifdef DEBUG
-//#define _GLIBCXX_DEBUG
+// #define _GLIBCXX_DEBUG
 #endif
 
-#include <iostream>
 #include "Database.h"
+#include <iostream>
 
 int main(int argc, char *argv[]) {
   if (argc <= 1) {
@@ -21,11 +21,30 @@ int main(int argc, char *argv[]) {
                        {"AHAHA-AHA-AHAHA", DB_DOUBLE},
                        {"OLOLOLO-OLOLOLO", DB_STRING},
                    }});
-  auto kek = db.GetSchemas();
-  auto lol = std::get<std::vector<Schema>>(kek.payload_);
 
-  for (auto now : lol) {
+  auto _ = db.InsertElement({0,
+                             "SCHEMKA-SCHEMKA",
+                             {
+                                 {"AHAHA-AHA-AHAHA", 3.14},
+                                 {"OLOLOLO-OLOLOLO", "URA, INSERT"},
+                             }});
+  auto root_id = get<int64_t>(_.payload_);
+  _ = db.InsertElement({root_id,
+                        "SCHEMKA-SCHEMKA",
+                        {
+                            {"AHAHA-AHA-AHAHA", 3.14},
+                            {"OLOLOLO-OLOLOLO", "URA, INSERT2"},
+                        }});
+  auto child_id = get<int64_t>(_.payload_);
+  db.DeleteElement(child_id);
+  db.UpdateElements(
+      {{"SCHEMKA-SCHEMKA", {{"OLOLOLO-OLOLOLO", OP_EQUAL, "URA, INSERT"}}},
+       {{"OLOLOLO-OLOLOLO", "URA, UPDATE"}}});
+  _ = db.GetElements();
+  auto res = get<std::vector<Element>>(_.payload_);
+  for (auto now : res) {
     now.Print();
+    std::cout << std::endl;
   }
   return 0;
 }
