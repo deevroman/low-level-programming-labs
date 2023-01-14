@@ -179,17 +179,17 @@ bool Database::ElementsTreeIterator::Remove() {
       this->db_->RewriteBytesBatch(raw.get(), prev_brother_elem.GetOnFileSize(), for_delete_elem.prev_brother_link_);
     }
   } else {
-    this->db_->master_header_.nodes.first_element = 0;
+    this->db_->master_header_.elements.first_element = 0;
   }
 
-  this->db_->FreeBytesBatch(current_ptr_, this->db_->master_header_.nodes);
+  this->db_->FreeBytesBatch(current_ptr_, this->db_->master_header_.elements);
 
   auto schema_box = db_->ReadUnpackedSchema(for_delete_elem.schema_);
   schema_box.cnt_elements_--;
   auto raw = std::unique_ptr<Byte[]>(schema_box.MakePackedSchema());
   db_->RewriteBytesBatch(raw.get(), schema_box.GetOnFileSize(), for_delete_elem.schema_);
 
-  this->db_->master_header_.nodes.count--;
+  this->db_->master_header_.elements.count--;
   this->db_->UpdateMasterHeader();
 
   if (for_delete_elem.brother_link_ != 0) {
@@ -295,9 +295,9 @@ bool Database::Load() {
   debug(master_header_.schemas.first_element);
   debug(master_header_.schemas.first_free_element);
   debug(master_header_.schemas.count);
-  debug(master_header_.nodes.first_element);
-  debug(master_header_.nodes.first_free_element);
-  debug(master_header_.nodes.count);
+  debug(master_header_.elements.first_element);
+  debug(master_header_.elements.first_free_element);
+  debug(master_header_.elements.count);
   debug(master_header_.strings.first_element);
   debug(master_header_.strings.first_free_element);
   debug(master_header_.strings.count);
@@ -315,8 +315,8 @@ void Database::Init() {
   master_header_.schemas = {};
   AllocPage(master_header_.schemas);
 
-  master_header_.nodes = {};
-  AllocPage(master_header_.nodes);
+  master_header_.elements = {};
+  AllocPage(master_header_.elements);
 
   master_header_.strings = {};
   AllocPage(master_header_.strings);
@@ -498,8 +498,8 @@ Database::Database(const std::string &file_path, bool overwrite) {
 
 Result Database::GetElements() {
   std::vector<Element> elements;
-  auto it = ElementsTreeIterator(self_ref_, master_header_.nodes);
-  for (int i = 0; i < master_header_.nodes.count; i++) {
+  auto it = ElementsTreeIterator(self_ref_, master_header_.elements);
+  for (int i = 0; i < master_header_.elements.count; i++) {
     elements.push_back(it.Read());
     it.Next();
   }
@@ -507,10 +507,10 @@ Result Database::GetElements() {
 }
 
 Result Database::GetElementByPath(const std::vector<int64_t> &path) {
-  if (!master_header_.nodes.first_element) {
+  if (!master_header_.elements.first_element) {
     return {false, "Path not found"};
   }
-  DbPtr cur_id = master_header_.nodes.first_element;
+  DbPtr cur_id = master_header_.elements.first_element;
   DbPtr nxt = cur_id;
   for (auto now_id : path) {
     cur_id = nxt;
@@ -543,8 +543,8 @@ Result Database::GetElements(const select_query &args) {
   }
 
   std::vector<Element> elements;
-  auto it = ElementsTreeIterator(self_ref_, master_header_.nodes);
-  for (int i = 0; i < master_header_.nodes.count; i++) {
+  auto it = ElementsTreeIterator(self_ref_, master_header_.elements);
+  for (int i = 0; i < master_header_.elements.count; i++) {
     auto cur = it.Read();
     if (schema.position_ == cur.schema_ && args.CheckConditionals(cur)) {
       elements.push_back(cur);
@@ -573,8 +573,8 @@ Result Database::UpdateElements(update_query args) {
     }
   }
 
-  auto it = ElementsTreeIterator(self_ref_, master_header_.nodes);
-  for (int i = 0; i < master_header_.nodes.count; i++) {
+  auto it = ElementsTreeIterator(self_ref_, master_header_.elements);
+  for (int i = 0; i < master_header_.elements.count; i++) {
     auto cur = it.Read();
     if (args.selector.CheckConditionals(cur)) {
       auto el = ReadUnpackedElement(cur.position_, -1);
@@ -619,7 +619,7 @@ Result Database::InsertElement(insert_query args) {
       return {false, "Element not match with schema"};
     }
   }
-  if (args.parent_id == 0 && master_header_.nodes.count != 0) {
+  if (args.parent_id == 0 && master_header_.elements.count != 0) {
     return {false, "Multiple tree roots"};
   }
 
@@ -647,11 +647,11 @@ Result Database::InsertElement(insert_query args) {
     }
     i++;
   }
-  DbPtr id = master_header_.nodes.first_free_element;
+  DbPtr id = master_header_.elements.first_free_element;
   if (args.parent_id == 0) {
     el.parent_link_ = 0;
     el.brother_link_ = 0;
-    master_header_.nodes.first_element = SaveElement(el);
+    master_header_.elements.first_element = SaveElement(el);
   } else {
     // нужно обновить родителя
 
@@ -659,7 +659,7 @@ Result Database::InsertElement(insert_query args) {
       auto parent = ReadUnpackedElement(args.parent_id, schema.GetElementPackedSize());
       auto new_brother = parent.child_link_;
 
-      parent.child_link_ = master_header_.nodes.first_free_element;
+      parent.child_link_ = master_header_.elements.first_free_element;
       auto raw = std::unique_ptr<Byte[]>(parent.MakePackedElement());
       RewriteBytesBatch(raw.get(), parent.GetOnFileSize(), args.parent_id);
       // записать сам элемент
@@ -682,7 +682,7 @@ Result Database::InsertElement(insert_query args) {
   schema_box.cnt_elements_++;
   auto raw = std::unique_ptr<Byte[]>(schema_box.MakePackedSchema());
   RewriteBytesBatch(raw.get(), schema_box.GetOnFileSize(), schema.position_);
-  master_header_.nodes.count++;
+  master_header_.elements.count++;
 
   UpdateMasterHeader();
   return {true, "Done", ResultPayload(id)};
@@ -735,8 +735,8 @@ Result Database::DeleteElement(DeleteQueryByIdQuery id) {
     debug("Невалидный id для удаления");
     return {false, "Invalid id"};
   }
-  auto it = ElementsTreeIterator(this, master_header_.nodes);
-  for (int i = 0; i < master_header_.nodes.count; i++) {
+  auto it = ElementsTreeIterator(this, master_header_.elements);
+  for (int i = 0; i < master_header_.elements.count; i++) {
     auto cur = it.Read();
     if (cur.id_ == id) {
       debug("Элемент для удаления найден");
@@ -765,8 +765,8 @@ Result Database::DeleteElements(const select_query &args) {
 
   int64_t cnt_deleted = 0;
   debug("Запрос на удаление элемента");
-  auto it = ElementsTreeIterator(this, master_header_.nodes);
-  for (int i = 0; i < master_header_.nodes.count;) {
+  auto it = ElementsTreeIterator(this, master_header_.elements);
+  for (int i = 0; i < master_header_.elements.count;) {
     auto cur = it.Read();
     if (schema.position_ == cur.schema_ && args.CheckConditionals(cur)) {
       debug("Элемент для удаления найден");
@@ -823,7 +823,7 @@ void Database::UpdateMasterHeader() { this->file_->Write(&master_header_, sizeof
 DbPtr Database::SaveElement(const ElementBox &el) {
   debug("Записываю элемент");
   auto raw = std::unique_ptr<Byte[]>(el.MakePackedElement());
-  DbPtr result = WriteBytesBatch(raw.get(), el.GetOnFileSize(), master_header_.nodes);
+  DbPtr result = WriteBytesBatch(raw.get(), el.GetOnFileSize(), master_header_.elements);
 
   debug("Элемент записан");
   return result;

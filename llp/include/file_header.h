@@ -14,10 +14,11 @@ struct file_header {
   DbPtr file_end{};
   // позиции первых страниц заданного типа
   FileChunkedList<kSchemasPageMarker> schemas;
-  FileChunkedList<kNodesPageMarker> nodes;
+  FileChunkedList<kNodesPageMarker> elements;
   FileChunkedList<kStringsPageMarker> strings;
+#ifdef DEBUG
   DbPtr pad{};
-
+#endif
   file_header() = default;
 
 } PACKED;
