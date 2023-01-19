@@ -8,6 +8,7 @@ on:
       - '**.pdf'
       - 'reports/**'
       - 'docs/**'
+      - 'parser/**'
   pull_request:
     branches: [ master ]
     paths-ignore:
@@ -15,6 +16,7 @@ on:
       - '**.pdf'
       - 'reports/**'
       - 'docs/**'
+      - 'parser/**'
 
 env:
   BUILD_TYPE: Release
