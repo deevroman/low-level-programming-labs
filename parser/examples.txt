@@ -1,0 +1,6 @@
+db.insert(123, "SCHEMA", {pole:"takoe", vtoroe_pole: True})
+db.find("SCHEMA", {pole:"takoe", vtoroe_pole: True})
+db.find("SCHEMA", {pole:"takoe", $or[$and[ipole:"itakoe2", ipole:"itakoe3"], pole:"takoe3"]})
+db.update("SCHEMA", {pole:{$ne:"oops"}, vtoroe_pole: True}, {$set: {pole:"oops", vtoroe_pole: False}})
+db.update("SCHEMA", {pole:{$ne:"oops"}, vtoroe_pole: True}, {$set: {pole:"oops", vtoroe_pole: False}})
+db.delete("SCHEMA", {pole:"takoe", vtoroe_pole: True})

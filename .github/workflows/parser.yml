@@ -1,0 +1,76 @@
+name: CMake
+
+on:
+  push:
+    branches: [ master ]
+    paths-ignore:
+      - '**.md'
+      - 'reports/**'
+      - 'docs/**'
+  pull_request:
+    branches: [ master ]
+    paths-ignore:
+      - '**.md'
+      - 'reports/**'
+      - 'docs/**'
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    name: ${{ matrix.os }}-${{ matrix.cxx_compiler || matrix._cxx_compiler }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            c_compiler: gcc-10
+            cxx_compiler: g++-10
+            generator: '-G "Unix Makefiles"'
+
+          - os: ubuntu-latest
+            c_compiler: clang
+            cxx_compiler: clang++
+            generator: '-G "Unix Makefiles"'
+
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build llp
+        run: |
+          cmake -B ${{github.workspace}}/parser/build ${{matrix.generator}} -DCMAKE_CXX_COMPILER=${{matrix.cxx_compiler}} -DCMAKE_C_COMPILER=${{matrix.c_compiler}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ${{github.workspace}}/parser
+          cmake --build ${{github.workspace}}/parser/build --config ${{env.BUILD_TYPE}}
+
+      - name: run examples
+        working-directory: ${{github.workspace}}
+        run: cat examples.txt | xargs -d '\n' ./parser/build/bin/*/*
+      
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.os }}-${{ matrix.cxx_compiler || matrix._cxx_compiler}}-parser
+          path: parser/build/bin/*/*
+          retention-days: 1
+
+      
+  create_release:
+    name: "Prelease"
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v3
+
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: true
+          title: "Development Build"
+          files: |
+            ubuntu-latest-g++-10-parser
+            ubuntu-latest-clang++-parser
+
+

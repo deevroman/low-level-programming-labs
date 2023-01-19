@@ -5,12 +5,14 @@ on:
     branches: [ master ]
     paths-ignore:
       - '**.md'
+      - '**.pdf'
       - 'reports/**'
       - 'docs/**'
   pull_request:
     branches: [ master ]
     paths-ignore:
       - '**.md'
+      - '**.pdf'
       - 'reports/**'
       - 'docs/**'
 
