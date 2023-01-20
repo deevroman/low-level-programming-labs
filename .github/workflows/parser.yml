@@ -60,9 +60,15 @@ jobs:
           cmake --build ${{github.workspace}}/parser/build --config ${{env.BUILD_TYPE}}
 
       - name: run examples
+        if: ${{matrix.os == 'macos-latest'}}
         working-directory: ${{github.workspace}}
         run: |
-          alias xargs=gxargs
+          cat ${{github.workspace}}/parser/examples.txt | gxargs -d '\n' -I _ sh -c "echo '_' | parser/build/bin/*/*"
+      
+      - name: run examples
+        if: ${{matrix.os != 'macos-latest'}}
+        working-directory: ${{github.workspace}}
+        run: |
           cat ${{github.workspace}}/parser/examples.txt | xargs -d '\n' -I _ sh -c "echo '_' | parser/build/bin/*/*"
       
       - name: run bench
