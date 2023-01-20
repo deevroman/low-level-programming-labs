@@ -49,10 +49,10 @@
 	#ifndef DEBUG
 	static void *custom_malloc(size_t size){
 		allocations_size += size;
-		return malloc(size);
+		return calloc(size);
 	}
 	#else
-	#DEFINE custom_malloc(size) malloc(size)
+	#DEFINE custom_malloc(size) calloc(size)
 	#endif
 
 	static void print_allocations_size(){
