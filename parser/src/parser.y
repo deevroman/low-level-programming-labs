@@ -15,7 +15,7 @@
 %define parse.error verbose
 %locations
 %union {
-	uint64_t num;
+	int64_t num;
 	char *string;
 	double fnum;
 	_Bool b;

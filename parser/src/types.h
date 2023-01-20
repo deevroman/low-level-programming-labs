@@ -66,9 +66,17 @@ static void print_spaces(int cnt){
 }
 
 static void print_field(struct field_key_value key_value) {
+  if(strlen(key_value.key) > 30){
+    printf("suka");
+    return;
+  }
   printf("'%s':", key_value.key);
   switch (key_value.value.value_type) {
   case DB_STRING:
+    if(strlen(key_value.value.data.str_value) > 30){
+      printf("suka");
+      return;
+    }
     printf("'%s'", key_value.value.data.str_value);
     break;
   case DB_INT32:
@@ -78,7 +86,7 @@ static void print_field(struct field_key_value key_value) {
     printf("'%f'", key_value.value.data.double_value);
     break;
   case DB_BOOL:
-    printf("'%s'", (key_value.value.data.double_value ? "true" : "false"));
+    printf("'%s'", (key_value.value.data.bool_value ? "true" : "false"));
     break;
   }
   printf("\n");
@@ -116,13 +124,15 @@ static void print_fields(struct new_field *f) {
 }
 
 static void print_query(struct query q) {
+  if(strlen(commands_name[q.command]) > 30){
+    printf("suka");
+    return;
+  }
   printf("Command: %s\n", commands_name[q.command]);
   if (q.command == CMD_INSERT) {
     printf("Parent id: %lld\n", q.parent);
   }
   printf("Schema: %s\n", q.schema);
-  size_t filter_count = 0;
-  size_t comp_count = 0;
   if (q.cond) {
     printf("Filters:\n");
     print_filter(q.cond, 1);
