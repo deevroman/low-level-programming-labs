@@ -32,7 +32,7 @@ https://github.com/deevroman/low-level-programming-labs/blob/master/.github/work
 <img src="img/mudroe-tainstvennoe-derevo-mem.jpg" width="50">
 
 Вариант 1. Форма данных: документное дерево
-Вариант 7. Язык запров: MongoShel
+Вариант 7. Язык запросов: MongoShell
 
 
 <table>
