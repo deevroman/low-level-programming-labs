@@ -69,7 +69,7 @@ jobs:
         if: ${{matrix.os != 'macos-latest'}}
         working-directory: ${{github.workspace}}
         run: |
-          cat ${{github.workspace}}/parser/examples.txt | xargs -d '\n' -I _ sh -c "echo '_' | parser/build/bin/*/*"
+          cat ${{github.workspace}}/parser/examples.txt | xargs -d '\n' -I _ sh -c "echo '_'; echo '_' | build/bin/*/*; echo '\n'"
       
       - name: run bench
         working-directory: ${{github.workspace}}/parser
