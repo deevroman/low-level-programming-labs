@@ -48,8 +48,7 @@ jobs:
       - name: run examples
         working-directory: ${{github.workspace}}
         run: |
-          cat ${{github.workspace}}/parser/examples.txt | xargs -d '\n' echo
-          cat ${{github.workspace}}/parser/examples.txt | xargs -d '\n' ${{github.workspace}}/parser/build/bin/*/*
+          cat ${{github.workspace}}/parser/examples.txt | xargs -d '\n' -I _ sh -c "echo '_' | parser/build/bin/*/*"
       
       - uses: actions/upload-artifact@v3
         with:
