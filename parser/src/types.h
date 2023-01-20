@@ -33,7 +33,7 @@ enum ASTType { OP_AND, OP_OR, OP_KEY_VALUE, OP_COMP };
 struct value {
   enum ValueType value_type;
   union {
-    uint64_t int_value;
+    int64_t int_value;
     double double_value;
     bool bool_value;
     char *str_value;
