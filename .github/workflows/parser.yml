@@ -51,7 +51,7 @@ jobs:
           cat ${{github.workspace}}/parser/examples.txt | xargs -d '\n' -I _ sh -c "echo '_' | parser/build/bin/*/*"
       
       - name: run bench
-        working-directory: ${{github.workspace}}
+        working-directory: ${{github.workspace}}/parser
         run: |
           for i in {1..30}; do sed -i 's/ipole:"itakoe2"/$or[ipole:"itakoe2", ipole:"itakoe3"]/g' bench.txt && cat bench.txt build/bin/*/* | grep Allocations; done
       
