@@ -47,7 +47,8 @@ jobs:
       - name: update MinGW
         if: ${{matrix.os == 'macos-latest'}}
         run: |
-          brew unlink bison
+          brew uninstall --force bison
+          brew install bison
           brew link bison
           brew link bison --force
         
