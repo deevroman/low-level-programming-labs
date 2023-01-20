@@ -89,6 +89,7 @@ query:
 	  }
 	  | DB DELETE OPBRACE QUOTE STRING QUOTE COMMA OPCBRACE filters CLCBRACE CLBRACE {
 		q.command = CMD_DELETE;
+		q.schema = $5;
 		q.cond = $9;
 	  }
 ;
