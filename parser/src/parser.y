@@ -28,7 +28,7 @@
 %token FIND INSERT DELETE UPDATE
 %token <string> STRING
 %token SET OR AND
-%token LT LET GT GET NE REGEX
+%token LT LTE GT GTE NE REGEX
 %token OPBRACE CLBRACE
 %token OPCBRACE CLCBRACE
 %token OPSQBRACE CLSQBRACE
@@ -188,9 +188,9 @@ bool : TRUE {$$ = 1;}
 ;
 
 comp : LT {$$ = OP_LT;}
-       | LET {$$ = OP_LET;}
+       | LTE {$$ = OP_LTE;}
        | GT {$$ = OP_GT;}
-       | GET {$$ = OP_GET;}
+       | GTE {$$ = OP_GTE;}
        | NE {$$ = OP_NE;}
 	   | REGEX {$$ = OP_NE;}
 ;

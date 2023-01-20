@@ -18,7 +18,7 @@ static const char *const commands_name[] = {
 };
 
 enum ValueType { DB_INT32 = 0, DB_DOUBLE, DB_STRING, DB_BOOL };
-enum Comparator { OP_LT = 0, OP_LET, OP_GT, OP_GET, OP_NE, OP_REGEX };
+enum Comparator { OP_LT = 0, OP_LTE, OP_GT, OP_GTE, OP_NE, OP_REGEX };
 
 struct query {
   enum Command command;

@@ -12,9 +12,9 @@
 "or"		return OR;
 "and"		return AND;
 "lt"		return LT;
-"let"		return LET;
+"lte"		return LTE;
 "gt"		return GT;
-"get"		return GET;
+"gte"		return GTE;
 "ne"		return NE;
 "regex"		return REGEX;
 \(			return OPBRACE;
