@@ -25,6 +25,7 @@ https://github.com/deevroman/low-level-programming-labs/blob/master/.github/work
 ### Отчёты
 
 - [Первая лабораторная](reports/lab1.pdf)
+- [Вторая лабораторная](reports/lab2.pdf)
 
 ---
 
