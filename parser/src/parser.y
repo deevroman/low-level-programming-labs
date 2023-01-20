@@ -192,7 +192,7 @@ comp : LT {$$ = OP_LT;}
        | GT {$$ = OP_GT;}
        | GTE {$$ = OP_GTE;}
        | NE {$$ = OP_NE;}
-	   | REGEX {$$ = OP_NE;}
+       | REGEX {$$ = OP_NE;}
 ;
 
 %%
