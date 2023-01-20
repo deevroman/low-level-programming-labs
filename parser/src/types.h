@@ -119,8 +119,8 @@ static void print_query(struct query q) {
   printf("Command: %s\n", commands_name[q.command]);
   if (q.command == CMD_INSERT) {
     printf("Parent id: %lld\n", q.parent);
-    printf("Schema: %s\n", q.schema);
   }
+  printf("Schema: %s\n", q.schema);
   size_t filter_count = 0;
   size_t comp_count = 0;
   if (q.cond) {

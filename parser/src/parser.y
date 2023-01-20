@@ -118,6 +118,8 @@ or_filters : filter {
 
 filter : STRING COLON value_literal {
 			$$ = custom_malloc(sizeof(struct filter));
+			$$->left = NULL;
+			$$->right = NULL;
 			$$->op = OP_KEY_VALUE;
 			$$->key_value.key = $1;
 			$$->key_value.value = $3;
@@ -125,6 +127,8 @@ filter : STRING COLON value_literal {
 	 	}
 	| STRING COLON OPCBRACE DOLLAR comp COLON value_literal CLCBRACE {
 			$$ = custom_malloc(sizeof(struct filter));
+			$$->left = NULL;
+			$$->right = NULL;
 			$$->op = OP_COMP;
 			$$->key_value.key = $1;
 			$$->key_value.value = $7;
