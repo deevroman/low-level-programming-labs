@@ -35,6 +35,10 @@ jobs:
             cxx_compiler: clang++
             generator: '-G "Unix Makefiles"'
 
+          - os: macos-latest
+            c_compiler: clang
+            cxx_compiler: clang++
+            generator: '-G "Unix Makefiles"'
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
@@ -78,5 +82,5 @@ jobs:
           files: |
             ubuntu-latest-g++-10-parser
             ubuntu-latest-clang++-parser
-
+            macos-latest-clang++-llp
 
