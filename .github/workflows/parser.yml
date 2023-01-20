@@ -44,7 +44,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         
-      - name: update MinGW
+      - name: update bison
         if: ${{matrix.os == 'macos-latest'}}
         run: |
           brew uninstall --force bison
@@ -54,6 +54,8 @@ jobs:
         
       - name: Build parser
         run: |
+          export PATH="/usr/local/opt/bison/bin:$PATH"
+          export LDFLAGS="-L/usr/local/opt/bison/lib"
           cmake -B ${{github.workspace}}/parser/build ${{matrix.generator}} -DCMAKE_CXX_COMPILER=${{matrix.cxx_compiler}} -DCMAKE_C_COMPILER=${{matrix.c_compiler}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ${{github.workspace}}/parser
           cmake --build ${{github.workspace}}/parser/build --config ${{env.BUILD_TYPE}}
 
