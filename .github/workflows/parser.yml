@@ -43,10 +43,16 @@ jobs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
       - uses: actions/checkout@v3
-
+        
+      - name: update MinGW
+        if: ${{matrix.os == 'macos-latest'}}
+        run: |
+          brew unlink bison
+          brew link bison
+          brew link bison --force
+        
       - name: Build parser
         run: |
-          export PATH="/usr/local/opt/bison/bin:$PATH"
           cmake -B ${{github.workspace}}/parser/build ${{matrix.generator}} -DCMAKE_CXX_COMPILER=${{matrix.cxx_compiler}} -DCMAKE_C_COMPILER=${{matrix.c_compiler}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ${{github.workspace}}/parser
           cmake --build ${{github.workspace}}/parser/build --config ${{env.BUILD_TYPE}}
 
