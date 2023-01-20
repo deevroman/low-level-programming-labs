@@ -51,6 +51,7 @@ jobs:
           brew install bison
           brew link bison
           brew link bison --force
+          brew install findutils
         
       - name: Build parser
         run: |
