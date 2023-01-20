@@ -67,7 +67,7 @@
 
 %%
 
-mongosh: query {print_query(q); print_allocations_size(); YYACCEPT;};
+mongoshell: query {print_query(q); print_allocations_size(); YYACCEPT;};
 
 query: 
       | DB INSERT OPBRACE INT_NUMBER COMMA QUOTE STRING QUOTE COMMA OPCBRACE new_vals CLCBRACE CLBRACE {
