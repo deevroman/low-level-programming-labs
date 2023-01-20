@@ -43,7 +43,7 @@
 %type <field_key_value_> new_val
 
 %{
-	static struct query q = {0};
+	static struct query q = {0, 0, 0, 0, 0};
 	static size_t allocations_size = 0;
 
 	#ifndef DEBUG

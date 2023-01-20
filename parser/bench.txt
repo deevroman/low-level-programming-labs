@@ -1,0 +1,1 @@
+db.find("SCHEMA", {pole:"takoe", $or[$and[ipole:"itakoe2", ipole:"itakoe3"], pole:"takoe3"]})
