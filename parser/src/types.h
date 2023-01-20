@@ -66,17 +66,9 @@ static void print_spaces(int cnt){
 }
 
 static void print_field(struct field_key_value key_value) {
-  if(strlen(key_value.key) > 30){
-    printf("suka");
-    return;
-  }
   printf("'%s':", key_value.key);
   switch (key_value.value.value_type) {
   case DB_STRING:
-    if(strlen(key_value.value.data.str_value) > 30){
-      printf("suka");
-      return;
-    }
     printf("'%s'", key_value.value.data.str_value);
     break;
   case DB_INT32:
@@ -124,10 +116,6 @@ static void print_fields(struct new_field *f) {
 }
 
 static void print_query(struct query q) {
-  if(strlen(commands_name[q.command]) > 30){
-    printf("suka");
-    return;
-  }
   printf("Command: %s\n", commands_name[q.command]);
   if (q.command == CMD_INSERT) {
     printf("Parent id: %lld\n", q.parent);
