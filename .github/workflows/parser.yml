@@ -54,7 +54,6 @@ jobs:
         
       - name: Build parser
         run: |
-          alias xargs=gxargs
           export PATH="/usr/local/opt/bison/bin:$PATH"
           export LDFLAGS="-L/usr/local/opt/bison/lib"
           cmake -B ${{github.workspace}}/parser/build ${{matrix.generator}} -DCMAKE_CXX_COMPILER=${{matrix.cxx_compiler}} -DCMAKE_C_COMPILER=${{matrix.c_compiler}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ${{github.workspace}}/parser
@@ -63,6 +62,7 @@ jobs:
       - name: run examples
         working-directory: ${{github.workspace}}
         run: |
+          alias xargs=gxargs
           cat ${{github.workspace}}/parser/examples.txt | xargs -d '\n' -I _ sh -c "echo '_' | parser/build/bin/*/*"
       
       - name: run bench
