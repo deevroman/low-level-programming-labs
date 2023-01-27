@@ -845,7 +845,7 @@ bool Database::ValidateElementByPtr(DbPtr ptr) const {
   }
   auto chunk = PageChunk();
   file_->Read(&chunk, sizeof(PageChunk), ptr);
-  return chunk.nxt_chunk >= 0;
+  return chunk.nxt_chunk >= 0; // TODO придумал случай когда можно сломать. Когда указатель дан на единственный свободный чанк, то проверка даже в учётом размера схемы обходится :(
 }
 
 #endif  // LLP_INCLUDE_DATABASE_H_

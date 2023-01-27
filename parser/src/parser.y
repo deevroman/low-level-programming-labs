@@ -10,6 +10,8 @@
 	#include <stdint.h>
 	#include <ctype.h>
     #include "types.h"
+    extern int yyparse();
+    extern struct query q;
 }
 
 %define parse.error verbose
@@ -43,7 +45,7 @@
 %type <field_key_value_> new_val
 
 %{
-	static struct query q = {0, 0, 0, 0, 0};
+	struct query q = {0, 0, 0, 0, 0};
 	static size_t allocations_size = 0;
 
 	#ifndef DEBUG
@@ -67,7 +69,7 @@
 
 %%
 
-mongoshell: query {print_query(q); print_allocations_size(); YYACCEPT;};
+mongoshell: query {/*print_query(q); print_allocations_size();*/ YYACCEPT;};
 
 query: 
       | DB INSERT OPBRACE INT_NUMBER COMMA QUOTE STRING QUOTE COMMA OPCBRACE new_vals CLCBRACE CLBRACE {

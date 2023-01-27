@@ -14,7 +14,7 @@
 "lt"		return LT;
 "lte"		return LTE;
 "gt"		return GT;
-"gte"		return GTE;
+"gte"		return GTE  ;
 "ne"		return NE;
 "regex"		return REGEX;
 \(			return OPBRACE;
