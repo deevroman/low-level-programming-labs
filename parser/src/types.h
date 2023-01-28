@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-enum Command { CMD_INSERT = 0, CMD_FIND, CMD_UPDATE, CMD_DELETE };
+enum Command {CMD_NONE = 0, CMD_INSERT, CMD_FIND, CMD_UPDATE, CMD_DELETE };
 
 static const char *const commands_name[] = {
     [CMD_INSERT] = "Insert",
@@ -33,7 +33,7 @@ enum ASTType { OP_AND, OP_OR, OP_KEY_VALUE, OP_COMP };
 struct value {
   enum ValueType value_type;
   union {
-    int64_t int_value;
+    int32_t int_value;
     double double_value;
     bool bool_value;
     char *str_value;

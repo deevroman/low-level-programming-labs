@@ -270,7 +270,9 @@ Database::SchemasListIterator::SchemasListIterator(Database *db, FileChunkedList
 Database::ElementsTreeIterator::ElementsTreeIterator(Database *db, FileChunkedList<kNodesPageMarker> head) {
   db_ = db;
   current_ptr_ = head.first_element;
-  Down();
+  if (current_ptr_) {
+    Down();
+  }
 }
 
 void Database::ElementsTreeIterator::Down() {
@@ -423,7 +425,7 @@ void Database::FreeBytesBatch(DbPtr target_batch, FileChunkedList<PageMarker> &e
   UpdateMasterHeader();
 }
 
-void Database::RewriteBytesBatch(Byte *target_batch, DbSize size, DbPtr start) const { 
+void Database::RewriteBytesBatch(Byte *target_batch, DbSize size, DbPtr start) const {
   debug_assert(start);
   debug_assert(size != 0);
 
@@ -535,6 +537,9 @@ Result Database::GetElements(const select_query &args) {
     return {false, "Schema for element not created"};
   }
   for (const auto &cond : args.conditionals) {
+    if (cond.op == OP_AND || cond.op == OP_OR) {
+      continue;
+    }
     if (schema.fields_.find(cond.field_name) == schema.fields_.end() ||
         schema.fields_[cond.field_name] != cond.value.index()) {
       debug("Conditions of field'" + cond.field_name + "' not match with schema");
@@ -560,6 +565,9 @@ Result Database::UpdateElements(update_query args) {
     return {false, "Schema for element not created"};
   }
   for (const auto &cond : args.selector.conditionals) {
+    if (cond.op == OP_AND || cond.op == OP_OR) {
+      continue;
+    }
     if (schema.fields_.find(cond.field_name) == schema.fields_.end() ||
         schema.fields_[cond.field_name] != cond.value.index()) {
       debug("Conditions of field'" + cond.field_name + "' not match with schema");
@@ -756,6 +764,9 @@ Result Database::DeleteElements(const select_query &args) {
     return {false, "Schema for element not created"};
   }
   for (const auto &cond : args.conditionals) {
+    if (cond.op == OP_AND || cond.op == OP_OR) {
+      continue;
+    }
     if (schema.fields_.find(cond.field_name) == schema.fields_.end() ||
         schema.fields_[cond.field_name] != cond.value.index()) {
       debug("Conditions of field'" + cond.field_name + "' not match with schema");
@@ -845,7 +856,8 @@ bool Database::ValidateElementByPtr(DbPtr ptr) const {
   }
   auto chunk = PageChunk();
   file_->Read(&chunk, sizeof(PageChunk), ptr);
-  return chunk.nxt_chunk >= 0;
+  return chunk.nxt_chunk >= 0;  // TODO придумал случай когда можно сломать. Когда указатель дан на единственный
+                                // свободный чанк, то проверка даже в учётом размера схемы обходится :(
 }
 
 #endif  // LLP_INCLUDE_DATABASE_H_

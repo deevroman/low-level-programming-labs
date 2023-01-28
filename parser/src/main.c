@@ -1,8 +1,8 @@
-#include <stdio.h>
-
-#include "lexer.h"
 #include "parser.h"
 
-int main (void) {
-  return yyparse();
+int main() {
+  int status = yyparse();
+  print_query(q);
+  print_allocations_size();
+  return status; 
 }

@@ -22,8 +22,22 @@ struct insert_query {
 struct select_query {
   std::string schema_name;
   std::vector<fields_conditional> conditionals;
-  [[nodiscard]] bool CheckConditionals(const Element &e) const {
-    return all_of(conditionals.begin(), conditionals.end(), [&e](auto x) { return e.CheckConditional(x); });
+  [[nodiscard]] bool CheckConditionals(const Element &e, int now_ind = 0) const {
+    if (conditionals[now_ind].left_op == 0 and conditionals[now_ind].right_op == 0) {
+      return e.CheckConditional(conditionals[now_ind]);
+    } else if (conditionals[now_ind].right_op != 0) {
+      if (conditionals[now_ind].op == OP_AND) {
+        return CheckConditionals(e, conditionals[now_ind].left_op) &&
+               CheckConditionals(e, conditionals[now_ind].right_op);
+      } else if (conditionals[now_ind].op == OP_OR) {
+        return CheckConditionals(e, conditionals[now_ind].left_op) ||
+               CheckConditionals(e, conditionals[now_ind].right_op);
+      } else {
+        error("Invalid binary operator");
+      }
+    } else {
+      return CheckConditionals(e, conditionals[now_ind].left_op);
+    }
   }
 };
 

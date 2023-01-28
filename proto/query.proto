@@ -1,0 +1,81 @@
+syntax = "proto3";
+package proto_query;
+
+enum CommandType {
+  CMD_INSERT = 0;
+  CMD_FIND = 1;
+  CMD_UPDATE = 2;
+  CMD_DELETE = 3;
+}
+
+enum ValueType {
+  DB_INT32 = 0;
+  DB_DOUBLE = 1;
+  DB_STRING = 2;
+  DB_BOOL = 3;
+};
+
+enum Comparator {
+  OP_LT = 0;
+  OP_LTE = 1;
+  OP_GT = 2;
+  OP_GTE = 3;
+  OP_NE = 4;
+  OP_REGEX = 5;
+};
+
+enum ASTType {
+  OP_AND = 0;
+  OP_OR = 1;
+  OP_KEY_VALUE = 2;
+  OP_COMP = 3;
+};
+
+message field_key_value {
+  string key = 1;
+  value value = 2;
+}
+
+message filter {
+  int64 left_node = 1;
+  int64 right_node = 2;
+  field_key_value key_value = 3;
+  Comparator comp = 4;
+  ASTType op = 5;
+}
+
+message value {
+  ValueType value_type = 1;
+  oneof data {
+    int32  int_value = 2;
+    double double_value = 3;
+    bool bool_value = 4;
+    string str_value = 5;
+  };
+}
+
+message Query {
+  CommandType command = 1;
+  int64 parent = 2;
+  string schema = 3;
+  repeated filter cond = 4;
+  repeated field_key_value new_fields = 5;
+}
+
+message Element {
+  int64 id = 1;
+  string schema = 2;
+  repeated field_key_value key_values = 3;
+}
+
+message QueryResponse {
+  bool ok = 1;
+  string error_message = 2;
+  repeated Element elements = 3;
+  int64 inserted_id = 4;
+}
+
+service QueryService {
+  rpc GetQuery(Query) returns (QueryResponse) {}
+}
+  
