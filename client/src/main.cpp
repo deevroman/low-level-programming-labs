@@ -11,6 +11,61 @@ extern "C" {
 #include "types.h"
 #include <iostream>
 
+void set_key_value(proto_query::field_key_value *field, field_key_value cur) {
+  field->set_key(cur.key);
+  switch (cur.value.value_type) {
+  case DB_INT32: {
+    field->mutable_value()->set_value_type(proto_query::DB_INT32);
+    field->mutable_value()->set_int_value(cur.value.data.int_value);
+    break;
+  }
+  case DB_DOUBLE: {
+    field->mutable_value()->set_value_type(proto_query::DB_DOUBLE);
+    field->mutable_value()->set_double_value(cur.value.data.double_value);
+    break;
+  }
+  case DB_STRING: {
+    field->mutable_value()->set_value_type(proto_query::DB_STRING);
+    field->mutable_value()->set_str_value(cur.value.data.str_value);
+    break;
+  }
+  case DB_BOOL: {
+    field->mutable_value()->set_value_type(proto_query::DB_BOOL);
+    field->mutable_value()->set_bool_value(cur.value.data.bool_value);
+    break;
+  }
+  }
+}
+
+void node_to_proto_filter(filter *cur_node, proto_query::filter *f, proto_query::Query &q) {
+  if (cur_node->left) {
+    f->set_left_node(q.cond_size());
+    auto cond = q.add_cond();
+    node_to_proto_filter(cur_node->left, cond, q);
+  }
+  if (cur_node->right) {
+    f->set_right_node(q.cond_size());
+    auto cond = q.add_cond();
+    node_to_proto_filter(cur_node->right, cond, q);
+  }
+  switch (cur_node->op) {
+  case OP_AND:
+    f->set_op(proto_query::OP_AND);
+    break;
+  case OP_OR:
+    f->set_op(proto_query::OP_OR);
+    break;
+  case OP_KEY_VALUE:
+    f->set_op(proto_query::OP_KEY_VALUE);
+    set_key_value(f->mutable_key_value(), cur_node->key_value);
+    break;
+  case OP_COMP:
+    f->set_op(proto_query::OP_COMP);
+    set_key_value(f->mutable_key_value(), cur_node->key_value);
+    break;
+  }
+}
+
 int main(int argc, char *argv[]) {
   if (argc <= 1) {
     std::cout << "Usage: ./client host:port";
@@ -22,10 +77,9 @@ int main(int argc, char *argv[]) {
 
   while (true) {
     grpc::ClientContext context;
-    if (!yyparse()) {
-      // TODO free q
+    if (yyparse()) {
+      free_all();
     }
-    q;
     proto_query::Query _query;
     _query.set_schema(q.schema);
 
@@ -36,49 +90,42 @@ int main(int argc, char *argv[]) {
       auto cur = q.new_fields;
       while (cur) {
         auto field = _query.add_new_fields();
-        field->set_key(cur->field.key);
-        switch (cur->field.value.value_type) {
-        case DB_INT32: {
-          field->mutable_value()->set_value_type(proto_query::DB_INT32);
-          field->mutable_value()->set_int_value(cur->field.value.data.int_value);
-          break;
-        }
-        case DB_DOUBLE: {
-          field->mutable_value()->set_value_type(proto_query::DB_DOUBLE);
-          field->mutable_value()->set_double_value(cur->field.value.data.double_value);
-          break;
-        }
-        case DB_STRING: {
-          field->mutable_value()->set_value_type(proto_query::DB_STRING);
-          field->mutable_value()->set_str_value(cur->field.value.data.str_value);
-          break;
-        }
-        case DB_BOOL: {
-          field->mutable_value()->set_value_type(proto_query::DB_BOOL);
-          field->mutable_value()->set_bool_value(cur->field.value.data.bool_value);
-          break;
-        }
-        }
+        set_key_value(field, cur->field);
         cur = cur->next;
       }
       break;
     }
-    case CMD_FIND:
+    case CMD_FIND: {
       _query.set_command(proto_query::CommandType::CMD_FIND);
-
+      auto cond = _query.add_cond();
+      node_to_proto_filter(q.cond, cond, _query);
       break;
-    case CMD_UPDATE:
+    }
+    case CMD_UPDATE: {
       _query.set_command(proto_query::CommandType::CMD_UPDATE);
+
+      auto cond = _query.add_cond();
+      node_to_proto_filter(q.cond, cond, _query);
+
+      auto cur = q.new_fields;
+      while (cur) {
+        auto field = _query.add_new_fields();
+        set_key_value(field, cur->field);
+        cur = cur->next;
+      }
       break;
-    case CMD_DELETE:
+    }
+    case CMD_DELETE: {
       _query.set_command(proto_query::CommandType::CMD_DELETE);
+      auto cond = _query.add_cond();
+      node_to_proto_filter(q.cond, cond, _query);
       break;
+    }
     default:
       break;
     }
 
-    // TODO free q
-    q = query();
+    free_all();
     proto_query::QueryResponse result;
     grpc::Status status = stub->GetQuery(&context, _query, &result);
 

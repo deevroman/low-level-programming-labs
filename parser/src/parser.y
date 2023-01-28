@@ -12,6 +12,7 @@
     #include "types.h"
     extern int yyparse();
     extern struct query q;
+    extern void free_all();
 }
 
 %define parse.error verbose
@@ -45,17 +46,37 @@
 %type <field_key_value_> new_val
 
 %{
+    struct list_allocs {
+        struct list_allocs* nxt;
+        void* alloc;
+    };
+    
+    struct list_allocs* list_alloc = NULL;
 	struct query q = {0, 0, 0, 0, 0};
 	static size_t allocations_size = 0;
 
-	#ifndef DEBUG
 	static void *custom_malloc(size_t size){
 		allocations_size += size;
-		return calloc(1, size);
+		struct list_allocs *new_alloc = malloc(sizeof(struct list_allocs));
+		new_alloc->nxt = list_alloc;
+		new_alloc->alloc = calloc(1, size);
+		list_alloc = new_alloc;
+		return new_alloc->alloc;
 	}
-	#else
-	#DEFINE custom_malloc(size) calloc(1, size)
-	#endif
+	
+    void free_list_allocs(struct list_allocs *cur){
+        if(cur == NULL) return;
+        free_list_allocs(cur->nxt);
+        free(cur->alloc);
+        free(cur);
+    }    
+	
+	void free_all(){
+		allocations_size = 0;
+		free_list_allocs(list_alloc);
+		list_alloc = NULL;
+        q = (struct query){0, 0, 0, 0, 0};
+	}
 
 	static void print_allocations_size(){
 		printf("Allocations size: %zu bytes\n", allocations_size);

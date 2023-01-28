@@ -74,6 +74,11 @@ int main(int argc, char *argv[]) {
                                    {"bool_pole", DB_BOOL},
                                    {"str_pole", DB_STRING},
                                }});
+  my_service.db->CreateSchema({"SCHEMA",
+                               {
+                                   {"pole", DB_STRING},
+                                   {"vtoroe_pole", DB_BOOL},
+                               }});
   builder.RegisterService(&my_service);
 
   std::unique_ptr<grpc::Server> server(builder.BuildAndStart());
