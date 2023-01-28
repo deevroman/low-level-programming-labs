@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(Parser LANGUAGES C CXX)
+project(Parser LANGUAGES C)
 set(CMAKE_CXX_STANDARD 20)
 
 set(SRC_DIR "src")
@@ -22,8 +22,7 @@ add_library(flex_bison STATIC "${LEXER_OUT}" "${PARSER_OUT}" "${SRC_DIR}/types.h
 set_target_properties(flex_bison PROPERTIES LINKER_LANGUAGE C)
 target_include_directories(flex_bison PRIVATE "${SRC_DIR}")
 
-add_executable(parser "${SRC_DIR}/main.cpp" "${LEXER_OUT}" "${PARSER_OUT}" "${PROTO_SRC}" "${SRC_DIR}/types.h")
-set_target_properties(parser PROPERTIES LINKER_LANGUAGE CXX)
+add_executable(parser "${SRC_DIR}/main.c" "${LEXER_OUT}" "${PARSER_OUT}" "${PROTO_SRC}" "${SRC_DIR}/types.h")
 target_include_directories(parser PRIVATE "${PARSER_DIR}" "${SRC_DIR}" "${CMAKE_CURRENT_BINARY_DIR}" "${PROTOBUF_INCLUDE_DIRS}")
 target_link_libraries(parser PRIVATE flex_bison)
 
