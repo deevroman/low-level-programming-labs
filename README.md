@@ -26,6 +26,7 @@ https://github.com/deevroman/low-level-programming-labs/blob/master/.github/work
 
 - [Первая лабораторная](reports/lab1.pdf)
 - [Вторая лабораторная](reports/lab2.pdf)
+- [Третья лабораторная](reports/lab3.pdf)
 
 ---
 
@@ -33,6 +34,7 @@ https://github.com/deevroman/low-level-programming-labs/blob/master/.github/work
 
 Вариант 1. Форма данных: документное дерево
 Вариант 7. Язык запросов: MongoShell
+Вариант 3. Формат транспортного протокола: Protocol Buffers
 
 
 <table>
