@@ -2,5 +2,8 @@ extern "C" {
 #include "parser.h"
 }
 int main() {
-  return yyparse();
+  int status = yyparse();
+  print_query(q);
+  print_allocations_size();
+  return status; 
 }

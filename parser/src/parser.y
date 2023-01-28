@@ -13,6 +13,7 @@
     extern int yyparse();
     extern struct query q;
     extern void free_all();
+    extern void print_allocations_size();
 }
 
 %define parse.error verbose
@@ -78,7 +79,7 @@
         q = (struct query){0, 0, 0, 0, 0};
 	}
 
-	static void print_allocations_size(){
+	void print_allocations_size(){
 		printf("Allocations size: %zu bytes\n", allocations_size);
 	}
 
