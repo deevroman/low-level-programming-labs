@@ -62,9 +62,17 @@ message Query {
   repeated field_key_value new_fields = 5;
 }
 
+message Element {
+  int64 id = 1;
+  string schema = 2;
+  repeated field_key_value key_values = 3;
+}
+
 message QueryResponse {
   bool ok = 1;
-  string answer = 2;
+  string error_message = 2;
+  repeated Element elements = 3;
+  int64 inserted_id = 4;
 }
 
 service QueryService {

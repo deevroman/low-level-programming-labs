@@ -11,7 +11,7 @@
 
 typedef std::variant<int32_t, double, std::string, bool> DataItem;
 
-enum Operator { OP_EQUAL, OP_NOT_EQUAL, OP_GREATER, OP_LESS };
+enum Operator { OP_EQUAL, OP_NOT_EQUAL, OP_GREATER, OP_LESS, OP_AND, OP_OR };
 
 template <typename T>
 bool EvalOperator(Operator op, T a, T b) {
@@ -33,6 +33,8 @@ struct fields_conditional {
   std::string field_name;
   Operator op;
   DataItem value;
+  int64_t left_op;
+  int64_t right_op;
 };
 
 class Element {

@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-enum Command { CMD_INSERT = 0, CMD_FIND, CMD_UPDATE, CMD_DELETE };
+enum Command {CMD_NONE = 0, CMD_INSERT, CMD_FIND, CMD_UPDATE, CMD_DELETE };
 
 static const char *const commands_name[] = {
     [CMD_INSERT] = "Insert",

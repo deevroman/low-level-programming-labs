@@ -2,8 +2,8 @@ extern "C" {
 #include "parser.h"
 }
 
-#include <message.grpc.pb.h>
-#include <message.pb.h>
+#include <query.grpc.pb.h>
+#include <query.pb.h>
 
 #include <grpc/grpc.h>
 #include <grpcpp/create_channel.h>
@@ -77,8 +77,11 @@ int main(int argc, char *argv[]) {
 
   while (true) {
     grpc::ClientContext context;
-    if (yyparse()) {
+    std::cout << ">";
+    if (yyparse() || q.command == CMD_NONE) {
       free_all();
+      std::cout << std::endl;
+      continue;
     }
     proto_query::Query _query;
     _query.set_schema(q.schema);
@@ -130,7 +133,32 @@ int main(int argc, char *argv[]) {
     grpc::Status status = stub->GetQuery(&context, _query, &result);
 
     std::cout << "Ok: " << (result.ok() ? "True" : "False") << std::endl;
-    std::cout << "Answer: " << result.answer() << std::endl;
+    if (!result.ok()) {
+      std::cout << "Error: " << result.error_message() << std::endl;
+    } else if (_query.command() == proto_query::CMD_INSERT){
+      std::cout << "Inserted id: " << result.inserted_id() << std::endl;
+    }
+    else if (_query.command() == proto_query::CMD_FIND) {
+      std::cout << "Count elements: " << result.elements_size() << std::endl;
+      for (const auto &now : result.elements()) {
+        std::cout << "id: " << now.id() << "\n";
+        std::cout << "schema: " << now.schema() << "\n";
+        for (const auto& now2 : now.key_values()) {
+          std::cout << now2.key() << ": ";
+          if (now2.value().value_type() == proto_query::DB_STRING) {
+            std::cout << now2.value().str_value();
+          } else if (now2.value().value_type() == proto_query::DB_INT32) {
+            std::cout << now2.value().int_value();
+          } else if (now2.value().value_type() == proto_query::DB_DOUBLE) {
+            std::cout << now2.value().double_value();
+          } else if (now2.value().value_type() == proto_query::DB_BOOL) {
+            std::cout << (now2.value().bool_value() ? "True" : "False");
+          }
+          std::cout << "\n";
+        }
+        std::cout << "\n";
+      }
+    }
   }
   return 0;
 }
